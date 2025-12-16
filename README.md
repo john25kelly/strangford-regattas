@@ -1,0 +1,1 @@
+# strangford-regattas
