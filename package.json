@@ -1,7 +1,7 @@
 {
   "name": "strangford-regattas-site",
   "version": "0.1.0",
-  "homepage": "https://john25kelly.github.io/strangford-regattas/",
+  "homepage": "https://john25kelly.github.io/",
   "private": true,
   "scripts": {
     "predeploy": "npm run build",
