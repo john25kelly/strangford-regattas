@@ -16,6 +16,7 @@ export default function Competitors() {
   const [sheetsLoading, setSheetsLoading] = useState(false)
   const [sheetsError, setSheetsError] = useState(null)
   const [selectedSheet, setSelectedSheet] = useState(null)
+  const [manualPaste, setManualPaste] = useState('')
 
   // fetching-all progress / throttling state
   const [fetchingAll, setFetchingAll] = useState(false)
@@ -46,8 +47,9 @@ export default function Competitors() {
         const names = entries.map(e => (e && e.title && e.title.$t) || '').filter(Boolean)
         if (!cancelled) {
           setSheetNames(names)
-          // default to 'Impala' tab if present, otherwise first tab
-          const defaultSheet = names.includes('Impala') ? 'Impala' : (names[0] || null)
+          // default to 'Impala' tab if present (case-insensitive), otherwise first tab
+          const impalaMatch = names.find(n => n && n.toLowerCase() === 'impala')
+          const defaultSheet = impalaMatch || (names[0] || null)
           setSelectedSheet(defaultSheet)
         }
       } catch (err) {
@@ -219,6 +221,33 @@ export default function Competitors() {
             )}
 
             <a className="btn-link" href={`https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`} target="_blank" rel="noreferrer">Open original sheet</a>
+
+            {/* Fallback: allow pasting comma-separated tab names when auto-fetch fails */}
+            {(!sheetsLoading && (!sheetNames || sheetNames.length === 0)) && (
+              <div style={{display:'flex',flexDirection:'column',gap:8,marginLeft:12}}>
+                <div style={{fontSize:'0.9rem',color:'var(--muted)'}}>If your sheet is private or the worksheets feed is unavailable you can paste tab names here (comma separated):</div>
+                {sheetsError && <div style={{fontSize:'0.85rem',color:'var(--muted)'}}>Auto-fetch error: {sheetsError}</div>}
+                <textarea
+                  aria-label="Paste sheet tab names (comma separated)"
+                  placeholder="Impala, IRC, Flying 15, Leisure 17"
+                  value={manualPaste}
+                  onChange={e => setManualPaste(e.target.value)}
+                  style={{width:320,height:64}}
+                />
+                <div style={{display:'flex',gap:8}}>
+                  <button className="btn" onClick={() => {
+                    const list = (manualPaste || '').split(',').map(s=>s.trim()).filter(Boolean)
+                    if (list.length) {
+                      setSheetNames(list)
+                      const defaultSheet = list.find(n => n.toLowerCase() === 'impala') || list[0]
+                      setSelectedSheet(defaultSheet)
+                      setManualPaste('')
+                    }
+                  }}>Use pasted names</button>
+                  <button className="btn-link" onClick={() => setManualPaste('')}>Clear</button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
