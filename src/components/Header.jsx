@@ -103,10 +103,12 @@ export default function Header() {
   return (
     <header className={`site-header ${open ? 'mobile-open' : ''}`}>
       <div className="header-inner">
-        <a className="brand" href="/">
+        <div className="brand">
           <img src="https://www.strangfordloughregattas.co.uk/favicon.ico" alt="Strangford" />
-          <span>Strangford Regattas</span>
-        </a>
+          <a className="brand-link" href="/">
+            <span>Strangford Regattas</span>
+          </a>
+        </div>
 
         {/* mobile menu toggle (visible on small screens) */}
         <button
