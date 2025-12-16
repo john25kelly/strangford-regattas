@@ -24,14 +24,7 @@ export default function Home() {
           <a href="/about" className="link">Read More</a>
         </p>
 
-        <h2>Quick Links</h2>
-        <ul className="list">
-          <li><strong><a href="https://docs.google.com/spreadsheets/d/1e_laZm7dNU6CTKQS69__nv4Rckhp-NZYbuhKFdZCSMA/edit?pli=1#gid=1460438101" target="_blank" rel="noreferrer">Yacht Ratings</a></strong> — Yacht Ratings Handicaps.</li>
-          <li><strong><a href="https://docs.google.com/spreadsheets/d/1e_laZm7dNU6CTKQS69__nv4Rckhp-NZYbuhKFdZCSMA/edit?pli=1#gid=1460438101" target="_blank" rel="noreferrer">One Design Fleet</a></strong> — Rivers, Glens, Flying Fifteens.</li>
-          <li><strong><a href="https://docs.google.com/spreadsheets/d/1e_laZm7dNU6CTKQS69__nv4Rckhp-NZYbuhKFdZCSMA/edit?pli=1#gid=1460438101" target="_blank" rel="noreferrer">Dinghy Fleet</a></strong> — Lasers, Toppers, Mirrors.</li>
-          <li><strong><a href="/nor">Notice Of Race / SI's</a></strong> — Available to download.</li>
-          <li><strong><a href="/results">Results</a></strong> — Regatta results in Strangford Lough.</li>
-        </ul>
+        {/* Quick Links removed as requested */}
 
         <p className="note">To replace or extend this text: edit <code>src/pages/Home.jsx</code> and paste the homepage text into this section.</p>
       </section>
