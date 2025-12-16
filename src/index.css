@@ -89,6 +89,21 @@ nav a:hover{color:#fff;background:var(--accent-2)}
 .competitors-controls{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:8px}
 .search-input{flex:1;max-width:420px;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:#fff}
 
+/* table header button */
+.th-button{
+  background:transparent;border:0;padding:6px 8px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;color:var(--accent);font-weight:600}
+.th-button:hover{color:var(--accent-2)}
+
+/* pagination */
+.pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;flex-wrap:wrap}
+.pagination-left, .pagination-center, .pagination-right{display:flex;gap:8px;align-items:center}
+.pagination button{background:#fff;border:1px solid var(--border);padding:6px 8px;border-radius:6px;cursor:pointer;color:var(--accent)}
+.pagination button:hover:not(:disabled){background:var(--accent-2);color:#fff}
+.pagination button:disabled{opacity:0.45;cursor:not-allowed}
+.pagination button.active{background:var(--accent);color:#fff}
+
+.page-size-select{padding:6px 8px;border-radius:6px;border:1px solid var(--border);background:#fff}
+
 @media (max-width:720px){
   /* use max-height + opacity for smooth slide-down animation instead of display:none */
   nav{
