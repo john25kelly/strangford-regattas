@@ -335,8 +335,6 @@ export default function Competitors() {
         )}
       </section>
 
-      <p className="note">If the sheet is private the list cannot be fetched — make sure the Google Sheet is published or shared publicly.</p>
-
       {/* Debug info panel (temporary) */}
       {showDebug && debugInfo && (
         <div className="debug-panel">
