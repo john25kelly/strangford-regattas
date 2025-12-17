@@ -5,6 +5,7 @@ import Home from './pages/Home'
 import NOR from './pages/NOR'
 import Results from './pages/Results'
 import Competitors from './pages/Competitors'
+import Contacts from './pages/Contacts'
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
           <Route path="/nor" element={<NOR />} />
           <Route path="/results" element={<Results />} />
           <Route path="/competitors" element={<Competitors />} />
+          <Route path="/contacts" element={<Contacts />} />
           {/* Redirect any unknown path to Home so the app doesn't render a blank page */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
