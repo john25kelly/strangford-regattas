@@ -3,56 +3,65 @@
     "date": "2026-06-06",
     "name": "Newtownards Regatta",
     "location": "NSC",
-    "hwt": "18:07"
+    "hwt": "18:07",
+    "pdfUrl": "https://www.strangfordloughregattas.co.uk/documents/NSC2025.pdf"
   },
   {
     "date": "2026-06-13",
     "name": "KYC Charity Keelboat Event",
     "location": "KYC",
-    "hwt": "11:59"
+    "hwt": "11:59",
+    "pdfUrl": "https://www.strangfordloughregattas.co.uk/documents/KYC2025.pdf"
   },
   {
     "date": "2026-06-20",
     "name": "Kircubbin Regatta",
     "location": "KSC",
-    "hwt": "18:29"
+    "hwt": "18:29",
+    "pdfUrl": "https://www.strangfordloughregattas.co.uk/documents/KSC2025.pdf"
   },
   {
     "date": "2026-06-27",
     "name": "QYC Regatta",
     "location": "QYC",
-    "hwt": "12:18"
+    "hwt": "12:18",
+    "pdfUrl": "https://www.strangfordloughregattas.co.uk/documents/QYC2025.pdf"
   },
   {
     "date": "2026-07-04",
     "name": "IOM Race",
     "location": "EDYC",
-    "hwt": "16:58"
+    "hwt": "16:58",
+    "pdfUrl": "https://www.strangfordloughregattas.co.uk/documents/EDYC2025v2.pdf"
   },
   {
     "date": "2026-07-11",
     "name": "Bar Buoy Race",
     "location": "SSC",
     "hwt": "16:56",
-    "tide": "LWT"
+    "tide": "LWT",
+    "pdfUrl": "https://www.strangfordloughregattas.co.uk/documents/BarBuoy2025.pdf"
   },
   {
     "date": "2026-07-12",
     "name": "Strangford Regatta",
     "location": "SSC",
     "hwt": "17:58",
-    "tide": "LWT"
+    "tide": "LWT",
+    "pdfUrl": "https://www.strangfordloughregattas.co.uk/documents/SSC2025.pdf"
   },
   {
     "date": "2026-07-13",
     "name": "Portaferry Town Regatta",
     "location": "PSC",
-    "hwt": "12:47"
+    "hwt": "12:47",
+    "pdfUrl": "https://www.strangfordloughregattas.co.uk/documents/PTR2025.pdf"
   },
   {
     "date": "2026-07-14",
     "name": "Portaferry Regatta",
     "location": "PSC",
-    "hwt": "13:46"
+    "hwt": "13:46",
+    "pdfUrl": "https://www.strangfordloughregattas.co.uk/documents/PSC2025.pdf"
   }
 ]

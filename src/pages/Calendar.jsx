@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import eventsData from '../data/events.json'
 
 // Helper: format month title
@@ -17,36 +17,43 @@ export default function Calendar() {
   const MIN = new Date(2026, 0, 1) // January 2026
   const MAX = new Date(2026, 11, 1) // December 2026
 
-  // Start view: April 2026 (preserve your earlier preference but allow full-year navigation)
+  // Start view: April 2026
   const [current, setCurrent] = useState(new Date(2026, 3, 1))
   // load events from JSON file
   const [events] = useState(eventsData)
-  // search query for filtering/highlighting events
-  const [query, setQuery] = useState('')
+  // modal state for viewing event details
+  const [selectedEvent, setSelectedEvent] = useState(null)
+  const modalCloseRef = useRef(null)
+  const previouslyFocused = useRef(null)
 
   const eventsByDate = useMemo(() => {
     const map = {}
     for (const e of events) {
-      (map[e.date] = map[e.date] || []).push(e)
+      ;(map[e.date] = map[e.date] || []).push(e)
     }
     return map
   }, [events])
 
-  // lowercase query for case-insensitive comparisons
-  const q = (query || '').trim().toLowerCase()
+  // Map known club/location codes or titles to last year's SI PDF URLs (from NOR page)
+  const siMap = {
+    NSC: 'https://www.strangfordloughregattas.co.uk/documents/NSC2025.pdf',
+    QYC: 'https://www.strangfordloughregattas.co.uk/documents/QYC2025.pdf',
+    KSC: 'https://www.strangfordloughregattas.co.uk/documents/KSC2025.pdf',
+    'Bar Buoy': 'https://www.strangfordloughregattas.co.uk/documents/BarBuoy2025.pdf',
+    SSC: 'https://www.strangfordloughregattas.co.uk/documents/SSC2025.pdf',
+    PSC: 'https://www.strangfordloughregattas.co.uk/documents/PSC2025.pdf',
+    PTR: 'https://www.strangfordloughregattas.co.uk/documents/PTR2025.pdf',
+    KYC: 'https://www.strangfordloughregattas.co.uk/documents/KYC2025.pdf',
+    EDYC: 'https://www.strangfordloughregattas.co.uk/documents/EDYC2025v2.pdf',
+    SLYC: 'https://www.strangfordloughregattas.co.uk/documents/slycv52025.pdf'
+  }
 
-  // (no separate upcoming list; events are read from src/data/events.json and highlighted in the grid)
-
-  // Months overview for quick navigation (April -> October 2026)
+  // Months overview for quick navigation (Jan -> Dec 2026)
   const months = useMemo(() => {
     const arr = []
-    for (let m = 0; m <= 11; m++) {
-      arr.push(new Date(2026, m, 1))
-    }
+    for (let m = 0; m <= 11; m++) arr.push(new Date(2026, m, 1))
     return arr
   }, [])
-
-  // (no separate upcoming list required)
 
   // compute today's key in YYYY-MM-DD so we can highlight it if it's in 2026
   const todayKey = useMemo(() => {
@@ -56,6 +63,54 @@ export default function Calendar() {
     const d = String(t.getDate()).padStart(2, '0')
     return `${y}-${m}-${d}`
   }, [])
+
+  // close modal on Escape key
+  useEffect(() => {
+    function onKey(e) {
+      if (e.key === 'Escape') setSelectedEvent(null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  // When modal opens: save focus, lock scroll, focus close button, trap Tab inside modal
+  useEffect(() => {
+    if (!selectedEvent) {
+      // restore focus and unlock scroll
+      try { if (previouslyFocused.current && previouslyFocused.current.focus) previouslyFocused.current.focus() } catch (err) {}
+      document.body.style.overflow = ''
+      return
+    }
+
+    previouslyFocused.current = document.activeElement
+    document.body.style.overflow = 'hidden'
+    setTimeout(() => {
+      if (modalCloseRef.current && modalCloseRef.current.focus) modalCloseRef.current.focus()
+    }, 0)
+
+    function trap(e) {
+      if (e.key !== 'Tab') return
+      const modal = document.querySelector('.modal')
+      if (!modal) return
+      const focusable = modal.querySelectorAll('a, button, input, [tabindex]:not([tabindex="-1"])')
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', trap)
+    return () => {
+      document.removeEventListener('keydown', trap)
+      document.body.style.overflow = ''
+    }
+  }, [selectedEvent])
 
   function go(delta) {
     const next = new Date(current.getFullYear(), current.getMonth() + delta, 1)
@@ -80,12 +135,8 @@ export default function Calendar() {
       <h1>Calendar</h1>
 
       <div style={{display:'flex',gap:12,alignItems:'center',marginBottom:12,flexWrap:'wrap'}}>
-        <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          <label htmlFor="calendar-search" className="muted" style={{marginRight:6}}>Search events:</label>
-          <input id="calendar-search" className="calendar-search" type="search" placeholder="Search by date, name, location or time" value={query} onChange={e => setQuery(e.target.value)} />
-          {query && <button type="button" className="btn-link" onClick={() => setQuery('')}>Clear</button>}
-        </div>
-        <div style={{marginLeft:'auto',display:'flex',gap:8,flexWrap:'wrap'}}>
+        <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+          <strong className="muted">Jump to month:</strong>
           {months.map((m,i) => (
             <button key={i} type="button" onClick={() => setCurrent(new Date(m))} className="btn-link">{monthTitle(m)}</button>
           ))}
@@ -114,33 +165,22 @@ export default function Calendar() {
             if (c === null) return <div key={`empty-${idx}`} className="calendar-day empty" />
             const key = dateKeyFromParts(year, month, c)
             const dayEvents = eventsByDate[key] || []
-            // determine if any event in this day matches the search query
-            const dayHasMatch = q && dayEvents.some(ev => (
-              ev.date.toLowerCase().includes(q) ||
-              (ev.name && ev.name.toLowerCase().includes(q)) ||
-              (ev.location && ev.location.toLowerCase().includes(q)) ||
-              (ev.hwt && ev.hwt.toLowerCase().includes(q)) ||
-              (ev.tide && ev.tide.toLowerCase().includes(q))
-            ))
 
             return (
-              <div key={key} className={`calendar-day ${dayEvents.length ? 'has-event' : ''} ${key === todayKey ? 'today' : ''} ${dayHasMatch ? 'match-day' : ''}`}>
+              <div key={key} className={`calendar-day ${dayEvents.length ? 'has-event' : ''} ${key === todayKey ? 'today' : ''}`}>
                 <div className="calendar-date">{c}</div>
-                {dayEvents.map((ev, i) => {
-                  const isMatch = q && (
-                    ev.date.toLowerCase().includes(q) ||
-                    (ev.name && ev.name.toLowerCase().includes(q)) ||
-                    (ev.location && ev.location.toLowerCase().includes(q)) ||
-                    (ev.hwt && ev.hwt.toLowerCase().includes(q)) ||
-                    (ev.tide && ev.tide.toLowerCase().includes(q))
-                  )
-                  return (
-                    <div key={i} className={`calendar-event ${isMatch ? 'match' : ''}`}>
-                      <div className="ev-name">{ev.name}</div>
-                      <div className="ev-meta"><strong>{ev.location}</strong> • {ev.tide ? ev.tide : 'HWT'} {ev.hwt}</div>
-                    </div>
-                  )
-                })}
+                {dayEvents.map((ev, i) => (
+                  <div
+                    key={i}
+                    role="button"
+                    tabIndex={0}
+                    className="calendar-event clickable"
+                    onClick={() => setSelectedEvent({ ...ev })}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedEvent({ ...ev }) }}
+                  >
+                    <div className="ev-name">{ev.name}</div>
+                  </div>
+                ))}
               </div>
             )
           })}
@@ -148,8 +188,48 @@ export default function Calendar() {
 
         <p className="muted note" style={{marginTop:12}}>Viewing months for the year 2026. Use the Prev/Next buttons or the month buttons above to navigate. Events are read from <code>src/data/events.json</code>.</p>
 
-        {/* Upcoming events list removed per request; events continue to show in the month grid and can be searched/highlighted. */}
-       </div>
-     </div>
-   )
+        {/* Event detail modal */}
+        {selectedEvent && (
+          <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" onClick={() => setSelectedEvent(null)}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3 id="modal-title" style={{margin:0}}>{selectedEvent.name}</h3>
+                <button ref={modalCloseRef} className="modal-close" aria-label="Close" onClick={() => setSelectedEvent(null)}>×</button>
+              </div>
+              <div className="modal-body">
+                <p><strong>Date:</strong> {selectedEvent.date}</p>
+                <p><strong>Location:</strong> {selectedEvent.location}</p>
+                <p><strong>{selectedEvent.tide ? selectedEvent.tide : 'HWT'}:</strong> {selectedEvent.hwt}</p>
+              </div>
+              <div className="modal-actions">
+                {/* SI View / Download buttons: enable when a matching SI URL is found for the event location */}
+                {(() => {
+                  const key = selectedEvent.location || selectedEvent.name || ''
+                  // try direct match, then upper-case trimmed key
+                  const url = siMap[key] || siMap[(key || '').toUpperCase()] || null
+                  if (url) {
+                    return (
+                      <>
+                        <a href={url} target="_blank" rel="noreferrer" className="btn-link" style={{marginRight:8}}>View SI</a>
+                        <a href={url} download className="btn-link">Download SI</a>
+                      </>
+                    )
+                  }
+                  // disabled fallbacks
+                  return (
+                    <>
+                      <button className="btn-link disabled" disabled style={{marginRight:8}}>View SI</button>
+                      <button className="btn-link disabled" disabled>Download SI</button>
+                    </>
+                  )
+                })()}
+
+                <button className="btn-link" onClick={() => setSelectedEvent(null)} style={{marginLeft:12}}>Close</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }

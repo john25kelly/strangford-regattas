@@ -127,10 +127,17 @@ nav a:hover{color:#fff;background:var(--accent-2)}
 .calendar-event .ev-name{font-weight:600}
 .calendar-event .ev-meta{font-size:0.85rem;color:var(--muted);margin-top:4px}
 
-/* Search and match highlighting */
-.calendar-search{padding:8px 10px;border-radius:6px;border:1px solid var(--border);min-width:260px}
-.calendar-event.match{outline:2px solid rgba(30,111,184,0.12);background:linear-gradient(180deg,#fff,#f3f8ff)}
-.match-day{box-shadow:0 6px 18px rgba(30,111,184,0.06);border-color:var(--accent-2)}
+/* Clickable event look */
+.calendar-event.clickable{cursor:pointer;padding:6px 8px;background:transparent;border-radius:6px}
+.calendar-event.clickable:hover{background:linear-gradient(180deg,#fff,#f3f8ff);box-shadow:0 1px 0 rgba(11,61,145,0.04)}
+
+/* Modal overlay and dialog */
+.modal-overlay{position:fixed;inset:0;background:rgba(11,61,145,0.36);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60}
+.modal{background:var(--card);border-radius:8px;max-width:520px;width:100%;box-shadow:0 12px 40px rgba(11,61,145,0.12);border:1px solid var(--border);overflow:hidden}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
+.modal-body{padding:16px}
+.modal-actions{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
+.modal-close{background:transparent;border:0;font-size:20px;line-height:1;cursor:pointer;color:var(--muted)}
 
 /* Highlight today's date */
 .calendar-day.today{border-color:var(--accent-2);box-shadow:0 4px 12px rgba(30,111,184,0.08);}
