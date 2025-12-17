@@ -260,9 +260,9 @@ export default function Competitors() {
               <option value={100}>100</option>
             </select>
 
-            <label style={{fontSize:'0.9rem',color:'var(--muted)'}}>Sheet:</label>
+            <label style={{fontSize:'0.9rem',color:'var(--muted)'}}>Class:</label>
             <select
-              aria-label="Select sheet"
+              aria-label="Select Class"
               value={selectedLabel}
               onChange={e => setSelectedLabel(e.target.value)}
             >
