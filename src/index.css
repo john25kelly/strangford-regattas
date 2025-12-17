@@ -117,7 +117,7 @@ nav a:hover{color:#fff;background:var(--accent-2)}
 .calendar-header button:disabled{opacity:0.45;cursor:not-allowed}
 .calendar-title{font-weight:700;font-size:1.05rem}
 
-.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.calendar-grid{display:grid;grid-template-columns:1.6fr repeat(5,1fr) 1.6fr;gap:8px}
 .calendar-weekday{text-align:center;font-weight:600;padding:6px 8px;color:var(--muted)}
 .calendar-day{min-height:100px;background:#fff;border:1px solid var(--border);border-radius:6px;padding:8px;position:relative;overflow:hidden}
 .calendar-day.empty{background:transparent;border:0}
@@ -129,9 +129,36 @@ nav a:hover{color:#fff;background:var(--accent-2)}
 
 /* Clickable event look */
 .calendar-event.clickable{cursor:pointer;padding:6px 8px;background:transparent;border-radius:6px}
-.calendar-event.clickable:hover{background:linear-gradient(180deg,#fff,#f3f8ff);box-shadow:0 1px 0 rgba(11,61,145,0.04)}
+.calendar-event.clickable:hover{background:linear-gradient(180deg,#fff,#f3f8ff);box-shadow:0 1px 0 rgba(11,61,145,0.04);transform:translateY(-2px);transition:transform 120ms ease}
 
-/* Modal overlay and dialog */
+/* Weekend emphasis */
+.calendar-weekday.weekend{
+  color:var(--accent-2);
+  font-weight:800;
+  background:linear-gradient(180deg, rgba(30,111,184,0.06), rgba(30,111,184,0.03));
+  border-radius:6px;
+  padding:8px 6px;
+}
+
+.calendar-day.weekend{
+  background:linear-gradient(180deg,#f6fbff,#eef8ff);
+  border-color: rgba(30,111,184,0.18);
+  box-shadow: 0 6px 20px rgba(30,111,184,0.08);
+}
+
+.calendar-day.weekend .calendar-date{
+  color:#fff;
+  background:var(--accent-2);
+  font-weight:800;
+  padding:4px 8px;
+  border-radius:8px;
+}
+
+.calendar-day.weekend .calendar-event .ev-name{
+  font-weight:700;
+  color:var(--accent);
+}
+
 .modal-overlay{position:fixed;inset:0;background:rgba(11,61,145,0.36);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60}
 .modal{background:var(--card);border-radius:8px;max-width:520px;width:100%;box-shadow:0 12px 40px rgba(11,61,145,0.12);border:1px solid var(--border);overflow:hidden}
 .modal-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
@@ -175,7 +202,7 @@ nav a:hover{color:#fff;background:var(--accent-2)}
 }
 
 @media (max-width:720px){
-  .calendar-grid{gap:6px}
+  .calendar-grid{grid-template-columns:repeat(7,1fr);gap:6px}
   .calendar-day{min-height:80px;padding:6px}
   .calendar-event{font-size:0.88rem;padding:6px}
 }

@@ -153,21 +153,18 @@ export default function Calendar() {
         </div>
 
         <div className="calendar-grid">
-          <div className="calendar-weekday">Sun</div>
-          <div className="calendar-weekday">Mon</div>
-          <div className="calendar-weekday">Tue</div>
-          <div className="calendar-weekday">Wed</div>
-          <div className="calendar-weekday">Thu</div>
-          <div className="calendar-weekday">Fri</div>
-          <div className="calendar-weekday">Sat</div>
+          {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((wd, idx) => (
+            <div key={wd} className={`calendar-weekday ${idx === 0 || idx === 6 ? 'weekend' : ''}`}>{wd}</div>
+          ))}
 
           {cells.map((c, idx) => {
             if (c === null) return <div key={`empty-${idx}`} className="calendar-day empty" />
             const key = dateKeyFromParts(year, month, c)
             const dayEvents = eventsByDate[key] || []
+            const dow = new Date(year, month, c).getDay()
 
             return (
-              <div key={key} className={`calendar-day ${dayEvents.length ? 'has-event' : ''} ${key === todayKey ? 'today' : ''}`}>
+              <div key={key} className={`calendar-day ${dayEvents.length ? 'has-event' : ''} ${key === todayKey ? 'today' : ''} ${dow === 0 || dow === 6 ? 'weekend' : ''}`}>
                 <div className="calendar-date">{c}</div>
                 {dayEvents.map((ev, i) => (
                   <div
