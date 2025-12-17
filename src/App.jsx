@@ -4,9 +4,10 @@ import Header from './components/Header'
 import Home from './pages/Home'
 import NOR from './pages/NOR'
 import Results from './pages/Results'
+import Gallery from './pages/Gallery'
 import Competitors from './pages/Competitors'
 import Contacts from './pages/Contacts'
-import Gallery from './pages/Gallery'
+import Calendar from './pages/Calendar'
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
           <Route path="/nor" element={<NOR />} />
           <Route path="/results" element={<Results />} />
           <Route path="/gallery" element={<Gallery />} />
+          <Route path="/calendar" element={<Calendar />} />
           <Route path="/competitors" element={<Competitors />} />
           <Route path="/contacts" element={<Contacts />} />
           {/* Redirect any unknown path to Home so the app doesn't render a blank page */}

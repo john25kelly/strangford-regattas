@@ -135,6 +135,7 @@ export default function Header() {
           <NavLink to="/nor" className={({isActive}) => isActive ? 'active' : ''}>NOR and SIs</NavLink>
           <NavLink to="/results" className={({isActive}) => isActive ? 'active' : ''}>Results</NavLink>
           <NavLink to="/gallery" className={({isActive}) => isActive ? 'active' : ''}>Gallery</NavLink>
+          <NavLink to="/calendar" className={({isActive}) => isActive ? 'active' : ''}>Calendar</NavLink>
           <NavLink to="/contacts" className={({isActive}) => isActive ? 'active' : ''}>Contacts</NavLink>
           <NavLink to="/competitors" className={({isActive}) => isActive ? 'active' : ''}>Competitors</NavLink>
         </nav>
