@@ -25,7 +25,6 @@ export default function Contacts() {
         ))}
       </section>
 
-      <p className="note">The Yacht Club Map has been intentionally omitted.</p>
     </div>
   )
 }
