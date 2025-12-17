@@ -187,8 +187,7 @@ export default function Calendar() {
           })}
         </div>
 
-        <p className="muted note" style={{marginTop:12}}>Viewing months for the year 2026. Use the Prev/Next buttons or the month buttons above to navigate. Events are read from <code>src/data/events.json</code>.</p>
-
+        {/* Event detail modal */}
         {selectedEvent && (
           <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" onClick={() => setSelectedEvent(null)}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
