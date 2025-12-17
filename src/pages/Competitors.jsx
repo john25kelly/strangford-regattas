@@ -9,98 +9,178 @@ export default function Competitors() {
   const [headers, setHeaders] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+
   const [query, setQuery] = useState('')
-
-  // sheet selection state
-  const [sheetNames, setSheetNames] = useState([])
-  const [sheetsLoading, setSheetsLoading] = useState(false)
-  const [sheetsError, setSheetsError] = useState(null)
-  const [selectedSheet, setSelectedSheet] = useState(null)
-  const [manualPaste, setManualPaste] = useState('')
-
-  // fetching-all progress / throttling state
-  const [fetchingAll, setFetchingAll] = useState(false)
-  const [fetchIndex, setFetchIndex] = useState(0)
-  const [fetchTotal, setFetchTotal] = useState(0)
-  const [fetchName, setFetchName] = useState('')
-
-  const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
-
-  // sorting & pagination state
-  const [sortBy, setSortBy] = useState(null) // header key
-  const [sortDir, setSortDir] = useState('asc') // or 'desc'
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(25)
+  const [sortBy, setSortBy] = useState(null)
+  const [sortDir, setSortDir] = useState('asc')
 
-  // Load list of sheet names (public worksheets feed). Choose "Impala" by default when present.
+  // Sheet options mapped to the specific gids you provided
+  const sheetOptions = [
+    { label: 'Impala', gid: '437404464' },
+    { label: 'IRC', gid: '1322535714' },
+    { label: 'Flying 15', gid: '1846775727' },
+    { label: 'YTC1', gid: '1573447540' },
+    { label: 'YTC2', gid: '1552739936' },
+    { label: 'YTC RS1', gid: '648508331' },
+    { label: 'YTC RS2', gid: '312713610' },
+    { label: 'SONATA', gid: '628627199' },
+    { label: 'Leisure 17', gid: '1839015274' },
+    { label: 'Glen', gid: '1847637110' },
+    { label: 'River', gid: '149257250' },
+    { label: 'Squib', gid: '1609112658' },
+    { label: 'Dinghy HCAP 1135 and under', gid: '1372506781' },
+    { label: 'Wayfarer', gid: '2078214300' },
+    { label: 'Topper', gid: '563295138' },
+    { label: 'Waverley', gid: '1305022950' },
+    { label: 'Dinghy HCAP 1136 and over', gid: '117611637' },
+    { label: 'Mirror', gid: '1009796840' },
+    { label: 'Visitors', gid: '460745798' }
+  ]
+
+  // selectedLabel and selectedSheet (gid) — initialize to stored label if present
+  const getInitialLabel = () => {
+    try {
+      const stored = localStorage.getItem('competitorsSelectedLabel')
+      if (stored && sheetOptions.some(s => s.label === stored)) return stored
+    } catch (e) {}
+    return sheetOptions[0].label
+  }
+
+  const [selectedLabel, setSelectedLabel] = useState(getInitialLabel)
+  const [selectedSheet, setSelectedSheet] = useState(() => {
+    const found = sheetOptions.find(s => s.label === getInitialLabel())
+    return found ? found.gid : sheetOptions[0].gid
+  })
+
+  // Keep selectedSheet in sync when the label changes
+  useEffect(() => {
+    const found = sheetOptions.find(s => s.label === selectedLabel)
+    setSelectedSheet(found ? found.gid : DEFAULT_GID)
+  }, [selectedLabel])
+
+  // Persist last selected label so the page re-opens the same tab on return
+  useEffect(() => {
+    try { localStorage.setItem('competitorsSelectedLabel', selectedLabel) } catch (e) {}
+  }, [selectedLabel])
+
+  // Header display aliases: map raw header keys (lowercased) to friendly labels
+  const columnAliases = {
+    'sailno': 'Sail No',
+    'sail no': 'Sail No',
+    'sail': 'Sail No',
+    'boatname': 'Boat Name',
+    'boat name': 'Boat Name',
+    'name': 'Boat Name',
+    'type': 'Type',
+    'class': 'Class',
+    'helm': 'Helm',
+    'crew': 'Crew',
+    'club': 'Club',
+    'hcap': 'Handicap',
+    'handicap': 'Handicap',
+    'owner': 'Owner'
+  }
+
+  const [headerDisplay, setHeaderDisplay] = useState({})
+  const [showDebug, setShowDebug] = useState(false)
+  const [debugInfo, setDebugInfo] = useState(null)
+
   useEffect(() => {
     let cancelled = false
-    async function loadSheetNames() {
-      setSheetsLoading(true)
-      setSheetsError(null)
-      try {
-        const url = `https://spreadsheets.google.com/feeds/worksheets/${SHEET_ID}/public/full?alt=json`
-        const res = await fetch(url)
-        if (!res.ok) throw new Error(`Network error: ${res.status}`)
-        const data = await res.json()
-        const entries = (data && data.feed && data.feed.entry) || []
-        const names = entries.map(e => (e && e.title && e.title.$t) || '').filter(Boolean)
-        if (!cancelled) {
-          setSheetNames(names)
-          // default to 'Impala' tab if present (case-insensitive), otherwise first tab
-          const impalaMatch = names.find(n => n && n.toLowerCase() === 'impala')
-          const defaultSheet = impalaMatch || (names[0] || null)
-          setSelectedSheet(defaultSheet)
-        }
-      } catch (err) {
-        if (!cancelled) setSheetsError(err.message || String(err))
-      } finally {
-        if (!cancelled) setSheetsLoading(false)
-      }
-    }
-    loadSheetNames()
-    return () => { cancelled = true }
-  }, [])
-
-  useEffect(() => {
-    let cancelled = false
-    async function loadCsv() {
+    async function fetchCsv() {
       setLoading(true)
       setError(null)
       try {
-        // always fetch the single selected sheet (or default gid fallback)
-        let csvUrl
-        if (selectedSheet) {
-          csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(selectedSheet)}`
-        } else {
-          csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${DEFAULT_GID}`
-        }
-
+        const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${selectedSheet}`
+        // diagnostic log for easier debugging when running locally
+        console.debug('Competitors: fetching sheet', { csvUrl, selectedSheet })
         const res = await fetch(csvUrl)
-        if (!res.ok) throw new Error(`Network error: ${res.status}`)
-        const csv = await res.text()
-        const parsed = Papa.parse(csv, { header: true, skipEmptyLines: true })
-        if (parsed.errors && parsed.errors.length) console.warn('PapaParse errors', parsed.errors)
-        if (!cancelled) {
-          setHeaders(parsed.meta.fields || [])
-          setRows(parsed.data || [])
+        if (!res.ok) {
+          const msg = `Network error: ${res.status} fetching ${csvUrl}`
+          console.error('Competitors fetch failed', { status: res.status, url: csvUrl })
+          throw new Error(msg)
+        }
+        const text = await res.text()
+
+        // Parse without header so we can inspect row 2 (index 1)
+        const parsed = Papa.parse(text, { header: false, skipEmptyLines: false })
+        if (parsed.errors && parsed.errors.length) {
+          console.warn('PapaParse errors', parsed.errors)
         }
 
-       } catch (err) {
-         if (!cancelled) setError(err.message || String(err))
-       } finally {
-         if (!cancelled) setLoading(false)
-       }
-     }
-     loadCsv()
+        const rawRows = parsed.data || []
+        const cellText = val => (val === null || val === undefined) ? '' : String(val).trim()
 
-     return () => { cancelled = true }
-  }, [selectedSheet, sheetNames])
+        let finalHeaders = []
+        let finalRows = []
 
-  // reset page when query, rows, or pageSize change
-  useEffect(() => {
-    setPage(1)
-  }, [query, rows.length, pageSize])
+        // Simple behavior: use row 2 (index 1) as header when it exists and has at least one non-empty cell
+        if (rawRows.length > 1) {
+          const candidate = Array.isArray(rawRows[1]) ? rawRows[1] : Object.values(rawRows[1])
+          const hasData = candidate && candidate.some(c => cellText(c) !== '')
+          if (hasData) {
+            const headerRow = candidate
+            finalHeaders = headerRow.map((c, idx) => {
+              let t = cellText(c)
+              if (!t) return `Column ${idx + 1}`
+              t = t.replace(/^unnamed:?\s*/i, '')
+              t = t.replace(/[_\-]\d+$/g, '')
+              t = t.replace(/^[_\-\s]+/, '')
+              t = t.replace(/\s+/g, ' ').trim()
+              if (!t || /^\d+$/.test(t)) return `Column ${idx + 1}`
+              return t
+            })
+
+            for (let i = 2; i < rawRows.length; i++) {
+              const row = Array.isArray(rawRows[i]) ? rawRows[i] : Object.values(rawRows[i])
+              if (!row || !row.some(c => cellText(c) !== '')) continue
+              const obj = {}
+              for (let j = 0; j < finalHeaders.length; j++) {
+                obj[finalHeaders[j]] = cellText(row[j])
+              }
+              finalRows.push(obj)
+            }
+
+            // set debug info for diagnostics
+            if (!cancelled) setDebugInfo({ headerSource: 'row2', headerRowRaw: headerRow, finalHeaders })
+          }
+        }
+
+        // Fallback: let Papa parse with header:true (in case row2 isn't usable)
+        if (finalHeaders.length === 0) {
+          const fallback = Papa.parse(text, { header: true, skipEmptyLines: true })
+          finalHeaders = fallback.meta?.fields || []
+          finalRows = fallback.data || []
+          if (!cancelled) setDebugInfo({ headerSource: 'fallback', finalHeaders })
+        }
+
+        if (!cancelled) {
+          setHeaders(finalHeaders)
+          const displayMap = {}
+          for (const h of finalHeaders) {
+            const key = (h || '').toString().trim()
+            const lookup = key.toLowerCase()
+            displayMap[key] = columnAliases[lookup] || key.replace(/\s+/g, ' ').split(' ').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ')
+          }
+          setHeaderDisplay(displayMap)
+
+          setRows(finalRows)
+          setPage(1)
+        }
+      } catch (err) {
+        if (!cancelled) setError(err.message || String(err))
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchCsv()
+    return () => { cancelled = true }
+  }, [selectedSheet])
+
+  // reset page when query, rows, pageSize change
+  useEffect(() => setPage(1), [query, rows.length, pageSize])
 
   const filtered = useMemo(() => {
     if (!query) return rows
@@ -113,28 +193,21 @@ export default function Competitors() {
     )
   }, [rows, headers, query])
 
-  // sorting helper
   const sorted = useMemo(() => {
     if (!sortBy) return filtered
     const dir = sortDir === 'asc' ? 1 : -1
-    const sortedCopy = [...filtered].sort((a, b) => {
-      const va = (a[sortBy] || '').toString().trim()
-      const vb = (b[sortBy] || '').toString().trim()
-      // prefer numeric compare when possible
+    return [...filtered].sort((a, b) => {
+      const va = ((a[sortBy] || '') + '').toString().trim()
+      const vb = ((b[sortBy] || '') + '') .toString().trim()
       const na = parseFloat(va.replace(/[^0-9.\-]/g, ''))
       const nb = parseFloat(vb.replace(/[^0-9.\-]/g, ''))
       const aIsNum = !isNaN(na) && va !== ''
       const bIsNum = !isNaN(nb) && vb !== ''
-      if (aIsNum && bIsNum) {
-        return (na - nb) * dir
-      }
-      // fallback to locale compare
+      if (aIsNum && bIsNum) return (na - nb) * dir
       return va.localeCompare(vb) * dir
     })
-    return sortedCopy
   }, [filtered, sortBy, sortDir])
 
-  // pagination
   const total = sorted.length
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const paged = useMemo(() => {
@@ -151,7 +224,6 @@ export default function Competitors() {
     }
   }
 
-  // simple page number window
   function pageNumbers() {
     const maxButtons = 7
     const pages = []
@@ -190,68 +262,24 @@ export default function Competitors() {
               <option value={100}>100</option>
             </select>
 
-            {/* Sheet selector: only show available tab names. Default opens 'Impala' if present. */}
-            {sheetsLoading ? (
-              <div style={{display:'flex',alignItems:'center',gap:8}}>
-                <svg width="18" height="18" viewBox="0 0 50 50" aria-hidden="true">
-                  <path fill="currentColor" d="M25 5A20 20 0 1 0 45 25" opacity="0.25"/>
-                  <path fill="currentColor" d="M25 5A20 20 0 0 1 45 25">
-                    <animateTransform attributeType="xml" attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="0.9s" repeatCount="indefinite" />
-                  </path>
-                </svg>
-                <select disabled aria-label="Select sheet/tab" className="sheet-select">
-                  <option>Loading sheets…</option>
-                </select>
-              </div>
-            ) : (
-              <select
-                aria-label="Select sheet/tab"
-                className="sheet-select"
-                value={selectedSheet || ''}
-                onChange={e => {
-                  setSelectedSheet(e.target.value)
-                }}
-              >
-                {sheetNames && sheetNames.length ? (
-                  sheetNames.map(name => <option key={name} value={name}>{name}</option>)
-                ) : (
-                  <option value={`DEFAULT`}>Default tab (gid {DEFAULT_GID})</option>
-                )}
-              </select>
-            )}
+            <label style={{fontSize:'0.9rem',color:'var(--muted)'}}>Sheet:</label>
+            <select
+              aria-label="Select sheet"
+              value={selectedLabel}
+              onChange={e => setSelectedLabel(e.target.value)}
+            >
+              {sheetOptions.map(s => <option key={s.label} value={s.label}>{s.label}</option>)}
+            </select>
 
-            <a className="btn-link" href={`https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`} target="_blank" rel="noreferrer">Open original sheet</a>
-
-            {/* Fallback: allow pasting comma-separated tab names when auto-fetch fails */}
-            {(!sheetsLoading && (!sheetNames || sheetNames.length === 0)) && (
-              <div style={{display:'flex',flexDirection:'column',gap:8,marginLeft:12}}>
-                <div style={{fontSize:'0.9rem',color:'var(--muted)'}}>If your sheet is private or the worksheets feed is unavailable you can paste tab names here (comma separated):</div>
-                {sheetsError && <div style={{fontSize:'0.85rem',color:'var(--muted)'}}>Auto-fetch error: {sheetsError}</div>}
-                <textarea
-                  aria-label="Paste sheet tab names (comma separated)"
-                  placeholder="Impala, IRC, Flying 15, Leisure 17"
-                  value={manualPaste}
-                  onChange={e => setManualPaste(e.target.value)}
-                  style={{width:320,height:64}}
-                />
-                <div style={{display:'flex',gap:8}}>
-                  <button className="btn" onClick={() => {
-                    const list = (manualPaste || '').split(',').map(s=>s.trim()).filter(Boolean)
-                    if (list.length) {
-                      setSheetNames(list)
-                      const defaultSheet = list.find(n => n.toLowerCase() === 'impala') || list[0]
-                      setSelectedSheet(defaultSheet)
-                      setManualPaste('')
-                    }
-                  }}>Use pasted names</button>
-                  <button className="btn-link" onClick={() => setManualPaste('')}>Clear</button>
-                </div>
-              </div>
-            )}
+            <a
+              className="btn-link"
+              style={{marginLeft:8}}
+              href={`https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?gid=${selectedSheet}`}
+              target="_blank"
+              rel="noreferrer"
+            >Open selected tab</a>
           </div>
         </div>
-
-        {sheetsError && <p className="muted">Could not load sheet list automatically: {sheetsError}.</p>}
 
         {loading && <p>Loading competitor list…</p>}
         {error && <p className="muted">Error loading sheet: {error}</p>}
@@ -264,7 +292,7 @@ export default function Competitors() {
                   {headers.map(h => (
                     <th key={h}>
                       <button className="th-button" onClick={() => toggleSort(h)} aria-label={`Sort by ${h}`}>
-                        <span>{h}</span>
+                        <span>{headerDisplay[h]}</span>
                         {sortBy === h && (
                           <span aria-hidden="true"> {sortDir === 'asc' ? '▲' : '▼'}</span>
                         )}
@@ -310,6 +338,15 @@ export default function Competitors() {
       </section>
 
       <p className="note">If the sheet is private the list cannot be fetched — make sure the Google Sheet is published or shared publicly.</p>
+
+      {/* Debug info panel (temporary) */}
+      {showDebug && debugInfo && (
+        <div className="debug-panel">
+          <h2>Debug Info</h2>
+          <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+          <button onClick={() => setShowDebug(false)}>Close</button>
+        </div>
+      )}
     </div>
   )
 }
