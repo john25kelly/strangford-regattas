@@ -117,7 +117,7 @@ nav a:hover{color:#fff;background:var(--accent-2)}
 .calendar-header button:disabled{opacity:0.45;cursor:not-allowed}
 .calendar-title{font-weight:700;font-size:1.05rem}
 
-.calendar-grid{display:grid;grid-template-columns:1.6fr repeat(5,1fr) 1.6fr;gap:8px}
+.calendar-grid{display:grid;grid-template-columns:repeat(5,1fr) 1.6fr 1.6fr;gap:8px}
 .calendar-weekday{text-align:center;font-weight:600;padding:6px 8px;color:var(--muted)}
 .calendar-day{min-height:100px;background:#fff;border:1px solid var(--border);border-radius:6px;padding:8px;position:relative;overflow:hidden}
 .calendar-day.empty{background:transparent;border:0}
@@ -146,12 +146,14 @@ nav a:hover{color:#fff;background:var(--accent-2)}
   box-shadow: 0 6px 20px rgba(30,111,184,0.08);
 }
 
+/* Remove the colored pill behind the day number on weekend cells; keep the cell shading */
 .calendar-day.weekend .calendar-date{
-  color:#fff;
-  background:var(--accent-2);
-  font-weight:800;
-  padding:4px 8px;
-  border-radius:8px;
+  /* no background, keep the date visible with accent color */
+  color:var(--accent-2);
+  font-weight:700;
+  background:transparent;
+  padding:0;
+  border-radius:0;
 }
 
 .calendar-day.weekend .calendar-event .ev-name{

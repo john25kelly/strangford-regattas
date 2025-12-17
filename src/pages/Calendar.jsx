@@ -12,16 +12,32 @@ function dateKeyFromParts(y, m, day) {
   return `${y}-${mm}-${String(day).padStart(2, '0')}`
 }
 
-export default function Calendar() {
-  // bounds: entire year 2026 (Jan -> Dec)
-  const MIN = new Date(2026, 0, 1) // January 2026
-  const MAX = new Date(2026, 11, 1) // December 2026
+// Helper: format ISO date (YYYY-MM-DD) into "12th July 2026"
+function formatDateWithOrdinal(iso) {
+  if (!iso) return ''
+  const parts = String(iso).split('-')
+  if (parts.length < 3) return iso
+  const y = parseInt(parts[0], 10)
+  const m = parseInt(parts[1], 10) - 1
+  const d = parseInt(parts[2], 10)
+  const date = new Date(y, m, d)
+  const day = date.getDate()
+  const month = date.toLocaleString(undefined, { month: 'long' })
+  const year = date.getFullYear()
+  function ordinal(n) {
+    const s = ['th','st','nd','rd']
+    const v = n % 100
+    return n + (s[(v - 20) % 10] || s[v] || s[0])
+  }
+  return `${ordinal(day)} ${month} ${year}`
+}
 
-  // Start view: April 2026
+export default function Calendar() {
+  const MIN = new Date(2026, 0, 1)
+  const MAX = new Date(2026, 11, 1)
+
   const [current, setCurrent] = useState(new Date(2026, 3, 1))
-  // load events from JSON file
   const [events] = useState(eventsData)
-  // modal state for viewing event details
   const [selectedEvent, setSelectedEvent] = useState(null)
   const modalCloseRef = useRef(null)
   const previouslyFocused = useRef(null)
@@ -34,7 +50,6 @@ export default function Calendar() {
     return map
   }, [events])
 
-  // Map known club/location codes or titles to last year's SI PDF URLs (from NOR page)
   const siMap = {
     NSC: 'https://www.strangfordloughregattas.co.uk/documents/NSC2025.pdf',
     QYC: 'https://www.strangfordloughregattas.co.uk/documents/QYC2025.pdf',
@@ -48,14 +63,12 @@ export default function Calendar() {
     SLYC: 'https://www.strangfordloughregattas.co.uk/documents/slycv52025.pdf'
   }
 
-  // Months overview for quick navigation (Jan -> Dec 2026)
   const months = useMemo(() => {
     const arr = []
     for (let m = 0; m <= 11; m++) arr.push(new Date(2026, m, 1))
     return arr
   }, [])
 
-  // compute today's key in YYYY-MM-DD so we can highlight it if it's in 2026
   const todayKey = useMemo(() => {
     const t = new Date()
     const y = t.getFullYear()
@@ -64,7 +77,6 @@ export default function Calendar() {
     return `${y}-${m}-${d}`
   }, [])
 
-  // close modal on Escape key
   useEffect(() => {
     function onKey(e) {
       if (e.key === 'Escape') setSelectedEvent(null)
@@ -73,20 +85,15 @@ export default function Calendar() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  // When modal opens: save focus, lock scroll, focus close button, trap Tab inside modal
   useEffect(() => {
     if (!selectedEvent) {
-      // restore focus and unlock scroll
       try { if (previouslyFocused.current && previouslyFocused.current.focus) previouslyFocused.current.focus() } catch (err) {}
       document.body.style.overflow = ''
       return
     }
-
     previouslyFocused.current = document.activeElement
     document.body.style.overflow = 'hidden'
-    setTimeout(() => {
-      if (modalCloseRef.current && modalCloseRef.current.focus) modalCloseRef.current.focus()
-    }, 0)
+    setTimeout(() => { if (modalCloseRef.current && modalCloseRef.current.focus) modalCloseRef.current.focus() }, 0)
 
     function trap(e) {
       if (e.key !== 'Tab') return
@@ -97,19 +104,14 @@ export default function Calendar() {
       const first = focusable[0]
       const last = focusable[focusable.length - 1]
       if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault()
-        last.focus()
+        e.preventDefault(); last.focus()
       } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault()
-        first.focus()
+        e.preventDefault(); first.focus()
       }
     }
 
     document.addEventListener('keydown', trap)
-    return () => {
-      document.removeEventListener('keydown', trap)
-      document.body.style.overflow = ''
-    }
+    return () => { document.removeEventListener('keydown', trap); document.body.style.overflow = '' }
   }, [selectedEvent])
 
   function go(delta) {
@@ -125,9 +127,10 @@ export default function Calendar() {
   const startDay = firstDay.getDay() // 0=Sun .. 6=Sat
   const daysInMonth = new Date(year, month + 1, 0).getDate()
 
-  // build array of cells including leading blanks
+  // Start weeks on Monday: compute leading blanks
   const cells = []
-  for (let i = 0; i < startDay; i++) cells.push(null)
+  const leadingBlanks = (startDay + 6) % 7 // maps Sunday(0)->6, Monday(1)->0, etc.
+  for (let i = 0; i < leadingBlanks; i++) cells.push(null)
   for (let d = 1; d <= daysInMonth; d++) cells.push(d)
 
   return (
@@ -153,8 +156,8 @@ export default function Calendar() {
         </div>
 
         <div className="calendar-grid">
-          {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((wd, idx) => (
-            <div key={wd} className={`calendar-weekday ${idx === 0 || idx === 6 ? 'weekend' : ''}`}>{wd}</div>
+          {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((wd, idx) => (
+            <div key={wd} className={`calendar-weekday ${idx === 5 || idx === 6 ? 'weekend' : ''}`}>{wd}</div>
           ))}
 
           {cells.map((c, idx) => {
@@ -185,7 +188,6 @@ export default function Calendar() {
 
         <p className="muted note" style={{marginTop:12}}>Viewing months for the year 2026. Use the Prev/Next buttons or the month buttons above to navigate. Events are read from <code>src/data/events.json</code>.</p>
 
-        {/* Event detail modal */}
         {selectedEvent && (
           <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" onClick={() => setSelectedEvent(null)}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -194,15 +196,13 @@ export default function Calendar() {
                 <button ref={modalCloseRef} className="modal-close" aria-label="Close" onClick={() => setSelectedEvent(null)}>×</button>
               </div>
               <div className="modal-body">
-                <p><strong>Date:</strong> {selectedEvent.date}</p>
+                <p><strong>Date:</strong> {formatDateWithOrdinal(selectedEvent.date)}</p>
                 <p><strong>Location:</strong> {selectedEvent.location}</p>
                 <p><strong>{selectedEvent.tide ? selectedEvent.tide : 'HWT'}:</strong> {selectedEvent.hwt}</p>
               </div>
               <div className="modal-actions">
-                {/* SI View / Download buttons: enable when a matching SI URL is found for the event location */}
                 {(() => {
                   const key = selectedEvent.location || selectedEvent.name || ''
-                  // try direct match, then upper-case trimmed key
                   const url = siMap[key] || siMap[(key || '').toUpperCase()] || null
                   if (url) {
                     return (
@@ -212,7 +212,6 @@ export default function Calendar() {
                       </>
                     )
                   }
-                  // disabled fallbacks
                   return (
                     <>
                       <button className="btn-link disabled" disabled style={{marginRight:8}}>View SI</button>
