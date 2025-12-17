@@ -6,8 +6,7 @@ export default function Results() {
   return (
     <div className="page results">
       <h1>Results</h1>
-      <p className="muted">Embedded results viewer (may be blocked by some sites due to framing policies).</p>
-      <div className="iframe-wrap">
+       <div className="iframe-wrap">
         <iframe
           title="Results"
           src={resultsUrl}

@@ -86,7 +86,6 @@ export default function NOR() {
         ))}
       </section>
 
-      <p className="note">PDF links currently point to the original site; to host PDFs locally, place files in <code>/public/pdfs/</code> and update the <code>pdfUrl</code> in <code>src/pages/NOR.jsx</code>.</p>
     </div>
   )
 }

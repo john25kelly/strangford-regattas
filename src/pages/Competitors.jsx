@@ -240,8 +240,6 @@ export default function Competitors() {
   return (
     <div className="page competitors">
       <h1>Competitors</h1>
-      <p className="muted">The competitor list below is fetched from a public Google Sheet and displayed here.</p>
-
       <section>
         <div className="competitors-controls">
           <input

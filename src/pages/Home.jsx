@@ -20,14 +20,9 @@ export default function Home() {
           Lough Regatta Conference.
         </p>
 
-        <p>
-          <a href="/about" className="link">Read More</a>
-        </p>
-
         {/* Quick Links removed as requested */}
 
-        <p className="note">To replace or extend this text: edit <code>src/pages/Home.jsx</code> and paste the homepage text into this section.</p>
-      </section>
+       </section>
     </div>
   )
 }

@@ -19,8 +19,6 @@ export default function Contacts() {
   return (
     <div className="page contacts">
       <h1>Contacts</h1>
-      <p className="muted">Below are the main contacts for the Strangford Lough Regattas. If you need to update details, edit <code>src/pages/Contacts.jsx</code>.</p>
-
       <section className="nor-grid">
         {contacts.map(c => (
           <ContactTile key={c.id} name={c.name} role={c.role} phone={c.phone} email={c.email} website={c.website} />
