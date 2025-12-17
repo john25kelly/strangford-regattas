@@ -39,7 +39,6 @@ export default function Calendar() {
   const [current, setCurrent] = useState(new Date(2026, 3, 1))
   const [events] = useState(eventsData)
   const [selectedEvent, setSelectedEvent] = useState(null)
-  const [expandedKey, setExpandedKey] = useState(null)
   const modalCloseRef = useRef(null)
   const previouslyFocused = useRef(null)
 
@@ -134,11 +133,6 @@ export default function Calendar() {
   for (let i = 0; i < leadingBlanks; i++) cells.push(null)
   for (let d = 1; d <= daysInMonth; d++) cells.push(d)
 
-  // helper to toggle inline expansion for a date cell
-  function toggleExpand(key) {
-    setExpandedKey(prev => (prev === key ? null : key))
-  }
-
   return (
     <div className="page calendar-page">
       <h1>Calendar</h1>
@@ -173,24 +167,8 @@ export default function Calendar() {
             const dow = new Date(year, month, c).getDay()
 
             return (
-              <div key={key} className={`calendar-day ${dayEvents.length ? 'has-event' : ''} ${key === todayKey ? 'today' : ''} ${dow === 0 || dow === 6 ? 'weekend' : ''} ${expandedKey === key ? 'expanded' : ''}`}>
+              <div key={key} className={`calendar-day ${dayEvents.length ? 'has-event' : ''} ${key === todayKey ? 'today' : ''} ${dow === 0 || dow === 6 ? 'weekend' : ''}`}>
                 <div className="calendar-date">{c}</div>
-
-                {/* Mobile-only expand toggle (visible via CSS on small screens) */}
-                {dayEvents.length > 0 && (
-                  <div
-                    className="expand-toggle"
-                    role="button"
-                    tabIndex={0}
-                    aria-expanded={expandedKey === key}
-                    aria-controls={`expanded-${key}`}
-                    onClick={(e) => { e.stopPropagation(); toggleExpand(key) }}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleExpand(key) } }}
-                    title={expandedKey === key ? 'Collapse' : 'Expand'}
-                  >
-                    ▾
-                  </div>
-                )}
 
                 {dayEvents.map((ev, i) => (
                   <div
@@ -204,36 +182,6 @@ export default function Calendar() {
                     <div className="ev-name">{ev.name}</div>
                   </div>
                 ))}
-
-                {/* Inline expanded details (rendered when expandedKey matches this day) */}
-                {expandedKey === key && (
-                  <div id={`expanded-${key}`} className="calendar-day-expanded">
-                    {dayEvents.map((ev, j) => {
-                      const locKey = ev.location || ev.name || ''
-                      const url = siMap[locKey] || siMap[(locKey || '').toUpperCase()] || ev.pdfUrl || null
-                      return (
-                        <div key={j} className="expanded-ev">
-                          <div className="ev-name"><strong>{ev.name}</strong></div>
-                          <div className="ev-meta">{ev.location} · {ev.hwt} {ev.tide ? `· ${ev.tide}` : ''}</div>
-                          <div className="expanded-actions">
-                            {url ? (
-                              <>
-                                <a href={url} target="_blank" rel="noreferrer" className="btn-link" style={{marginRight:8}}>View SI</a>
-                                <a href={url} download className="btn-link">Download SI</a>
-                              </>
-                            ) : (
-                              <>
-                                <button className="btn-link disabled" disabled style={{marginRight:8}}>View SI</button>
-                                <button className="btn-link disabled" disabled>Download SI</button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-
               </div>
             )
           })}
