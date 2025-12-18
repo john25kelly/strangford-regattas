@@ -309,6 +309,20 @@ export default function CalendarFromSheet() {
   for (let i = 0; i < leadingBlanks; i++) cells.push(null)
   for (let d = 1; d <= daysInMonth; d++) cells.push(d)
 
+  // compute PDF/ SI URL for the currently selected event (used in modal)
+  // IMPORTANT: enable View/Download only when the spreadsheet row itself contains a pdfUrl.
+  // Do not fall back to `siMap` here — users requested that missing pdfUrl in the sheet keeps the buttons disabled.
+  // Trim the pdfUrl value and treat empty/whitespace-only strings as absent
+  let selectedEventPdfUrl = null
+  if (selectedEvent && selectedEvent.pdfUrl) {
+    try {
+      const trimmed = String(selectedEvent.pdfUrl).trim()
+      selectedEventPdfUrl = trimmed.length ? trimmed : null
+    } catch (err) {
+      selectedEventPdfUrl = null
+    }
+  }
+
   return (
     <div className="page calendar-page">
       <h1>Events Calendar</h1>
@@ -377,27 +391,25 @@ export default function CalendarFromSheet() {
                 <p><strong>Date:</strong> {formatDateWithOrdinal(selectedEvent.date)}</p>
                 <p><strong>Location:</strong> {selectedEvent.location}</p>
                 <p><strong>{selectedEvent.tide ? selectedEvent.tide : 'HWT'}:</strong> {selectedEvent.hwt}</p>
+                {!selectedEventPdfUrl && (
+                  <p className="muted" style={{marginTop:8}}>
+                    <strong>Note:</strong> The SIs are not yet available{selectedEvent && selectedEvent.name ? ` for ${selectedEvent.name}` : ''}
+                  </p>
+                )}
               </div>
 
               <div className="modal-actions">
-                {(() => {
-                  const key = selectedEvent.location || selectedEvent.name || ''
-                  const url = selectedEvent.pdfUrl || siMap[key] || siMap[(key || '').toUpperCase()] || null
-                  if (url) {
-                    return (
-                      <>
-                        <a href={url} target="_blank" rel="noreferrer" className="btn-link" style={{marginRight:8}}>View SI</a>
-                        <a href={url} download className="btn-link">Download SI</a>
-                      </>
-                    )
-                  }
-                  return (
-                    <>
-                      <button className="btn-link disabled" disabled style={{marginRight:8}}>View SI</button>
-                      <button className="btn-link disabled" disabled>Download SI</button>
-                    </>
-                  )
-                })()}
+                {selectedEventPdfUrl ? (
+                  <>
+                    <a href={selectedEventPdfUrl} target="_blank" rel="noreferrer" className="btn-link" style={{marginRight:8}}>View SI</a>
+                    <a href={selectedEventPdfUrl} download className="btn-link">Download SI</a>
+                  </>
+                ) : (
+                  <>
+                    <button className="btn-link disabled" disabled style={{marginRight:8}}>View SI</button>
+                    <button className="btn-link disabled" disabled>Download SI</button>
+                  </>
+                )}
 
                 <button className="btn-link" onClick={() => setSelectedEvent(null)} style={{marginLeft:12}}>Close</button>
               </div>
