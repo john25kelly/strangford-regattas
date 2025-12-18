@@ -4,7 +4,6 @@ import Header from './components/Header'
 import Home from './pages/Home'
 import NOR from './pages/NOR'
 import Results from './pages/Results'
-import Gallery from './pages/Gallery'
 import Competitors from './pages/Competitors'
 import Contacts from './pages/Contacts'
 import Calendar from './pages/Calendar'
@@ -19,7 +18,6 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/nor" element={<NOR />} />
           <Route path="/results" element={<Results />} />
-          <Route path="/gallery" element={<Gallery />} />
           {/* Serve the sheet-backed calendar at the canonical /calendar path */}
           <Route path="/calendar" element={<CalendarFromSheet />} />
           {/* Keep the original calendar available at /calendar-legacy (not shown in menu) */}
