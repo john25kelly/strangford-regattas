@@ -32,6 +32,12 @@ Deploy to GitHub pages:
 npm run deploy
 ```
 
+To update the local events.json from the live site, run:
+
+```bash
+python3 scripts/import_calendar.py --url "https://docs.google.com/spreadsheets/d/1aJbtVHiTU1XrvAq1aW7ZJ2kxeRPzdDFi29Xq55htjg4/export?format=csv&gid=0"
+```
+
 Where to add content
 
 - Homepage text: edit `src/pages/Home.jsx` and paste the text inside the `<section className="home-content">` element.

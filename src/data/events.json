@@ -1,67 +1,306 @@
 [
   {
-    "date": "2026-06-06",
-    "name": "Newtownards Regatta",
-    "location": "NSC",
-    "hwt": "18:07",
-    "pdfUrl": "https://www.strangfordloughregattas.co.uk/documents/NSC2025.pdf"
+    "date": "9th May 2026",
+    "name": "Spring Series",
+    "location": "QYC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
   },
   {
-    "date": "2026-06-13",
-    "name": "KYC Charity Keelboat Event",
+    "date": "23rd May 2026",
+    "name": "Leisure 17 Big Weekend",
+    "location": "EDYC",
+    "hwt": "13.35",
+    "tide": "LWT",
+    "pdfUrl": null
+  },
+  {
+    "date": "24th May 2026",
+    "name": "Leisure 17 Big Weekend",
+    "location": "EDYC",
+    "hwt": "14.36",
+    "tide": "LWT",
+    "pdfUrl": null
+  },
+  {
+    "date": "13th June 2026",
+    "name": "Killyleagh YC Charity Keelboat Event",
     "location": "KYC",
     "hwt": "11:59",
-    "pdfUrl": "https://www.strangfordloughregattas.co.uk/documents/KYC2025.pdf"
+    "tide": null,
+    "pdfUrl": null
   },
   {
-    "date": "2026-06-20",
-    "name": "Kircubbin Regatta",
+    "date": "20th June 2026",
+    "name": "Kircubbin SC Regatta",
     "location": "KSC",
     "hwt": "18:29",
-    "pdfUrl": "https://www.strangfordloughregattas.co.uk/documents/KSC2025.pdf"
+    "tide": null,
+    "pdfUrl": null
   },
   {
-    "date": "2026-06-27",
-    "name": "QYC Regatta",
+    "date": "27th June 2026",
+    "name": "Quoile YC Regatta",
     "location": "QYC",
     "hwt": "12:18",
-    "pdfUrl": "https://www.strangfordloughregattas.co.uk/documents/QYC2025.pdf"
+    "tide": null,
+    "pdfUrl": null
   },
   {
-    "date": "2026-07-04",
-    "name": "IOM Race",
+    "date": "6th June 2026",
+    "name": "Newtownards SC Regatta",
+    "location": "NSC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "4th July 2026",
+    "name": "Isle of Man Peel Race",
     "location": "EDYC",
-    "hwt": "16:58",
-    "pdfUrl": "https://www.strangfordloughregattas.co.uk/documents/EDYC2025v2.pdf"
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
   },
   {
-    "date": "2026-07-11",
+    "date": "11th July 2026",
     "name": "Bar Buoy Race",
     "location": "SSC",
-    "hwt": "16:56",
-    "tide": "LWT",
-    "pdfUrl": "https://www.strangfordloughregattas.co.uk/documents/BarBuoy2025.pdf"
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
   },
   {
-    "date": "2026-07-12",
-    "name": "Strangford Regatta",
+    "date": "12th July 2026",
+    "name": "Strangford SC Regatta",
     "location": "SSC",
-    "hwt": "17:58",
-    "tide": "LWT",
-    "pdfUrl": "https://www.strangfordloughregattas.co.uk/documents/SSC2025.pdf"
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
   },
   {
-    "date": "2026-07-13",
+    "date": "13th July 2026",
     "name": "Portaferry Town Regatta",
     "location": "PSC",
-    "hwt": "12:47",
-    "pdfUrl": "https://www.strangfordloughregattas.co.uk/documents/PTR2025.pdf"
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
   },
   {
-    "date": "2026-07-14",
-    "name": "Portaferry Regatta",
+    "date": "14th July 2026",
+    "name": "Portaferry SC Regatta",
     "location": "PSC",
-    "hwt": "13:46",
-    "pdfUrl": "https://www.strangfordloughregattas.co.uk/documents/PSC2025.pdf"
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "18th July 2026",
+    "name": "South Rock Race",
+    "location": "PSC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "25th July 2026",
+    "name": "Killyleagh YC Regatta",
+    "location": "KYC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "1st August 2026",
+    "name": "East Down YC Regatta",
+    "location": "EDYC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "8th August 2026",
+    "name": "RLNI Charity Race",
+    "location": "QYC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "22nd August 2026",
+    "name": "Strangford Lough YC Regatta",
+    "location": "SLYC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "29th August 2026",
+    "name": "Killyleagh YC Open Keel Boat Event",
+    "location": "KYC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "5th September 2026",
+    "name": "Ardglass Race",
+    "location": "EDYC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "12th September 2026",
+    "name": "Strangford SC 80th Anniversary Regatta",
+    "location": "SSC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "19th September 2026",
+    "name": "Frostie Series",
+    "location": "SLYC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "26th September 2026",
+    "name": "Frostie Series",
+    "location": "SLYC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "3rd October 2026",
+    "name": "Frostie Series",
+    "location": "SLYC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "10th October 2026",
+    "name": "Frostie Series",
+    "location": "SLYC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "17th October 2026",
+    "name": "Frostie Series",
+    "location": "SLYC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "30th May 2026",
+    "name": "Flying Fifteens Northerns",
+    "location": "SSC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "31st May 2026",
+    "name": "Flying Fifteens Northerns",
+    "location": "SSC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "16th May 2026",
+    "name": "Strangford Lough YC Optimist Championships",
+    "location": "SLYC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "17th May 2026",
+    "name": "Strangford Lough YC Optimist Championships",
+    "location": "SLYC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "11th October 2026",
+    "name": "Flying 15 Tyrone Crystal Trophy",
+    "location": "SSC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "14th August 2026",
+    "name": "Squib Irish Championships",
+    "location": "KYC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "15th August 2026",
+    "name": "Squib Irish Championships",
+    "location": "KYC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "16th August 2026",
+    "name": "Squib Irish Championships",
+    "location": "KYC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "28th June 2026",
+    "name": "Quoile YC Youth Series",
+    "location": "QYC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "11th July 2026",
+    "name": "Strangford SC Youth Series",
+    "location": "SSC",
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "26th July 2026",
+    "name": "Killyleagh YC Youth Series",
+    "location": null,
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "2nd August 2026",
+    "name": "East Down YC Youth Series",
+    "location": null,
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
+  },
+  {
+    "date": "23rd August 2026",
+    "name": "Strangford Lough YC Youth Series",
+    "location": null,
+    "hwt": null,
+    "tide": null,
+    "pdfUrl": null
   }
 ]
