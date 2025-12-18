@@ -233,6 +233,7 @@ nav a:hover{color:#fff;background:var(--accent-2)}
     max-height:0;opacity:0;transform:translateY(-8px);
     transition: max-height 260ms ease, opacity 220ms ease, transform 220ms ease;
     z-index:58; /* sit above table headers and header (header z-index:54) but below modal-overlay (z-index:60) */
+    pointer-events: none; /* disable clicks when closed */
   }
   /* left accent strip for stronger visual identity */
   nav::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:6px;background:var(--accent-2);border-radius:6px}
@@ -241,7 +242,7 @@ nav a:hover{color:#fff;background:var(--accent-2)}
   nav a:hover{background:var(--accent-2);color:#fff}
   .menu-toggle{display:flex;z-index:59;position:relative} /* ensure toggle sits above the nav for tap access */
   /* when mobile menu is open, expand the dropdown */
-  .site-header.mobile-open nav{max-height:520px;opacity:1;transform:translateY(0)}
+  .site-header.mobile-open nav{max-height:520px;opacity:1;transform:translateY(0);pointer-events:auto}
   /* animate hamburger to X when open */
   .site-header.mobile-open .menu-toggle span:nth-child(1){transform:translateY(6px) rotate(45deg)}
   .site-header.mobile-open .menu-toggle span:nth-child(2){opacity:0}
