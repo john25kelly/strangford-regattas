@@ -1,6 +1,9 @@
 import React from 'react'
 
 export default function Home() {
+  // ensure the public asset path respects Vite's base (works in dev and production)
+  const imgSrc = (import.meta && import.meta.env && import.meta.env.BASE_URL ? import.meta.env.BASE_URL : '/') + 'whatsapp-qr.jpg'
+
   return (
     <div className="page home">
       <h1>Welcome to Strangford Regattas</h1>
@@ -25,7 +28,7 @@ export default function Home() {
         {/* WhatsApp QR code (put the image at public/whatsapp-qr.jpg) */}
         <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,marginTop:20}}>
           <img
-            src="/whatsapp-qr.jpg"
+            src={imgSrc}
             alt="WhatsApp group QR code for Strangford Lough Regatta"
             style={{maxWidth:360,width:'100%',height:'auto',borderRadius:8,boxShadow:'0 6px 18px rgba(0,0,0,0.1)'}}
           />

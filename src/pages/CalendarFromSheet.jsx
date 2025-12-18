@@ -311,7 +311,7 @@ export default function CalendarFromSheet() {
 
   return (
     <div className="page calendar-page">
-      <h1>Calendar from Sheet</h1>
+      <h1>Events Calendar</h1>
 
       <div style={{display:'flex',gap:12,alignItems:'center',marginBottom:12,flexWrap:'wrap'}}>
         <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
