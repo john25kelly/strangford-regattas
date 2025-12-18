@@ -20,7 +20,10 @@ export default function App() {
           <Route path="/nor" element={<NOR />} />
           <Route path="/results" element={<Results />} />
           <Route path="/gallery" element={<Gallery />} />
-          <Route path="/calendar" element={<Calendar />} />
+          {/* Serve the sheet-backed calendar at the canonical /calendar path */}
+          <Route path="/calendar" element={<CalendarFromSheet />} />
+          {/* Keep the original calendar available at /calendar-legacy (not shown in menu) */}
+          <Route path="/calendar-legacy" element={<Calendar />} />
           <Route path="/calendar-from-sheet" element={<CalendarFromSheet />} />
           <Route path="/competitors" element={<Competitors />} />
           <Route path="/contacts" element={<Contacts />} />
