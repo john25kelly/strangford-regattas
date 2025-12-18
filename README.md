@@ -26,6 +26,12 @@ Preview production build:
 npm run preview
 ```
 
+Deploy to GitHub pages:
+
+```bash
+npm run deploy
+```
+
 Where to add content
 
 - Homepage text: edit `src/pages/Home.jsx` and paste the text inside the `<section className="home-content">` element.
