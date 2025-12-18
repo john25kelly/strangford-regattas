@@ -124,15 +124,51 @@ export default function CalendarFromSheet() {
 
   const csvUrl = normalizeToCsvUrl(SHEET_URL)
 
+  // Range for the calendar (clamp to 2026 months)
+  const MIN = new Date(2026, 0, 1)
+  const MAX = new Date(2026, 11, 1)
+
+  // Restore saved month (format: YYYY-MM) from localStorage when available
+  function loadSavedCurrent() {
+    try {
+      const s = localStorage.getItem('calendar:current')
+      if (s && /^\d{4}-\d{2}$/.test(s)) {
+        const [yy, mm] = s.split('-')
+        const y = parseInt(yy, 10)
+        const m = Math.max(1, Math.min(12, parseInt(mm, 10))) - 1
+        const d = new Date(y, m, 1)
+        if (!isNaN(d.getTime())) {
+          if (d < MIN) return new Date(MIN)
+          if (d > MAX) return new Date(MAX)
+          return d
+        }
+      }
+    } catch (err) {
+      // ignore localStorage errors
+    }
+    return new Date(2026, 3, 1)
+  }
+
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
   // calendar state
-  const [current, setCurrent] = useState(new Date(2026, 3, 1))
+  const [current, setCurrent] = useState(() => loadSavedCurrent())
   const [selectedEvent, setSelectedEvent] = useState(null)
   const modalCloseRef = useRef(null)
   const previouslyFocused = useRef(null)
+
+  // Persist the current month when it changes
+  useEffect(() => {
+    try {
+      const y = current.getFullYear()
+      const m = String(current.getMonth() + 1).padStart(2, '0')
+      localStorage.setItem('calendar:current', `${y}-${m}`)
+    } catch (err) {
+      // ignore
+    }
+  }, [current])
 
   const siMap = {
     NSC: 'https://www.strangfordloughregattas.co.uk/documents/NSC2025.pdf',
