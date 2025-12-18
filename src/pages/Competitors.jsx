@@ -240,9 +240,6 @@ export default function Competitors() {
   return (
     <div className="page competitors">
       <h1>Competitors</h1>
-      <p className="muted" style={{marginTop:8, marginBottom:12}}>
-        It is extremely important that your boat is on the lists below if you wish to race in the Strangford Lough Regattas during the year. All information must be up-to-date or you risk not getting a place in the race. If a boat is not on the list the owner (inside lough boats) should contact his/her Club Sailing Sec who will give them a handicap etc. The Club Sailing Sec will contact the SLRC Boat List Coordinator with the alteration and the web shall be updated. If a boat from outside the lough wants to race then the owner should contact the Sailing Sec of the club who is organising the event with boat details and handicap. Proof may be required.
-      </p>
       <section>
         <div className="competitors-controls">
           <input
@@ -336,6 +333,12 @@ export default function Competitors() {
             <p className="muted" style={{marginTop:8}}>Showing {Math.min((page-1)*pageSize+1, total)}–{Math.min(page*pageSize, total)} of {total} entries</p>
           </div>
         )}
+
+        <div className="info-panel" role="note" aria-live="polite">
+          <p className="muted" style={{margin:0}}>
+            It is extremely important that your boat is on the lists below if you wish to race in the Strangford Lough Regattas during the year. All information must be up-to-date or you risk not getting a place in the race. If a boat is not on the list the owner (inside lough boats) should contact his/her Club Sailing Sec who will give them a handicap etc. The Club Sailing Sec will contact the SLRC Boat List Coordinator with the alteration and the web shall be updated. If a boat from outside the lough wants to race then the owner should contact the Sailing Sec of the club who is organising the event with boat details and handicap. Proof may be required.
+          </p>
+        </div>
       </section>
 
       {/* Debug info panel (temporary) */}

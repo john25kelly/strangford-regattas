@@ -22,6 +22,18 @@ export default function Home() {
 
         {/* Quick Links removed as requested */}
 
+        {/* WhatsApp QR code (put the image at public/whatsapp-qr.jpg) */}
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,marginTop:20}}>
+          <img
+            src="/whatsapp-qr.jpg"
+            alt="WhatsApp group QR code for Strangford Lough Regatta"
+            style={{maxWidth:360,width:'100%',height:'auto',borderRadius:8,boxShadow:'0 6px 18px rgba(0,0,0,0.1)'}}
+          />
+          <p className="muted" style={{textAlign:'center',maxWidth:600}}>
+            This QR code joins the Strangford Lough Regatta WhatsApp group — scan it with your phone to join the group.
+          </p>
+        </div>
+
        </section>
     </div>
   )

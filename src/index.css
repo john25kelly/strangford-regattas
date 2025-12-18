@@ -219,7 +219,7 @@ nav a:hover{color:#fff;background:var(--accent-2)}
   .gallery-item{flex:0 0 100vw;max-width:100vw}
 }
 
-@media (max-width:720px){
+@media (max-width:720px), (pointer:coarse) {
   /* use max-height + opacity for smooth slide-down animation instead of display:none */
   nav{
     /* keep layout as column but collapsed by default */
@@ -251,3 +251,14 @@ nav a:hover{color:#fff;background:var(--accent-2)}
   .calendar-day{min-height:80px;padding:6px}
   .calendar-event{font-size:0.88rem;padding:6px}
 }
+
+/* Info panel used for important site notes (e.g., Competitors page) */
+.info-panel{
+  background:linear-gradient(180deg,#fff,#f7fbff);
+  border:1px solid var(--border);
+  padding:12px 14px;
+  border-radius:8px;
+  margin-top:12px;
+  box-shadow:0 6px 18px rgba(11,61,145,0.06);
+}
+.info-panel p{margin:0;color:var(--muted);font-size:0.95rem;line-height:1.45}
