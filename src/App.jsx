@@ -8,6 +8,7 @@ import Gallery from './pages/Gallery'
 import Competitors from './pages/Competitors'
 import Contacts from './pages/Contacts'
 import Calendar from './pages/Calendar'
+import CalendarFromSheet from './pages/CalendarFromSheet'
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/results" element={<Results />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/calendar" element={<Calendar />} />
+          <Route path="/calendar-from-sheet" element={<CalendarFromSheet />} />
           <Route path="/competitors" element={<Competitors />} />
           <Route path="/contacts" element={<Contacts />} />
           {/* Redirect any unknown path to Home so the app doesn't render a blank page */}
