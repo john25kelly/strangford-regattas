@@ -296,3 +296,35 @@ nav a:hover{color:#fff;background:var(--accent-2)}
   box-shadow:0 6px 18px rgba(11,61,145,0.06);
 }
 .info-panel p{margin:0;color:var(--muted);font-size:0.95rem;line-height:1.45}
+
+@media (min-width:721px) and (max-width:850px) {
+  /* Slightly tighter header for medium screens to avoid clutter when zoomed */
+  .header-inner{
+    padding:8px 12px;
+  }
+
+  /* Slightly smaller brand/logo */
+  .brand img{
+    width:30px;
+    height:30px;
+  }
+
+  /* Slightly reduced title size and spacing */
+  .brand-link{
+    font-size:0.95rem;
+    margin-left:4px;
+  }
+
+  /* Reduce nav link size and spacing so items fit on 721px widths */
+  nav a{
+    margin-left:8px;
+    padding:6px 8px;
+    font-size:0.95rem;
+  }
+
+  /* Slightly reduce hamburger size so it doesn't dominate */
+  .menu-toggle{
+    width:40px;
+    height:40px;
+  }
+}
