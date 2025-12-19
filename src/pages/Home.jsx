@@ -9,11 +9,10 @@ export default function Home() {
       <h1>Welcome to Strangford Regattas</h1>
       <section className="home-content">
         <p>
-          Welcome to the Strangford Lough Regatta website. Discover one of Northern
-          Ireland’s most distinctive and rewarding sailing venues. This website is
-          your central hub for everything related to the Strangford Lough Regattas,
-          bringing together the latest news, race information, and essential
-          updates for sailors of all levels.
+          Discover one of Northern Ireland’s most distinctive and rewarding sailing
+          venues. This website is your central hub for everything related to the
+          Strangford Lough Regattas, bringing together the latest news, race
+          information, and essential updates for sailors of all levels.
         </p>
 
         <p>
