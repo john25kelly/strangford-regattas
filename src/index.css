@@ -184,6 +184,12 @@ nav a:hover{color:#fff;background:var(--accent-2)}
 
 .modal-overlay{position:fixed;inset:0;background:rgba(11,61,145,0.36);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60}
 .modal{background:var(--card);border-radius:8px;max-width:520px;width:100%;box-shadow:0 12px 40px rgba(11,61,145,0.12);border:1px solid var(--border);overflow:hidden}
+
+/* Make the modal a bit smaller on the calendar page specifically (still responsive on small screens) */
+.page.calendar-page .modal{
+  max-width:420px;
+}
+
 .modal-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)}
 .modal-body{padding:16px}
 .modal-actions{padding:12px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
