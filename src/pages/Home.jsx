@@ -8,19 +8,28 @@ export default function Home() {
     <div className="page home">
       <h1>Welcome to Strangford Regattas</h1>
       <section className="home-content">
-        <h3>Welcome to the Strangford Lough Regatta's web-site.</h3>
-        <h4>
-          Welcome to the web-site, dedicated to providing sailors who compete in the
-          Strangford Lough Regattas with the most up-to-date news and information
-          required for Racing.
-        </h4>
+        <p>
+          Welcome to the Strangford Lough Regatta website. Discover one of Northern
+          Ireland’s most distinctive and rewarding sailing venues. This website is
+          your central hub for everything related to the Strangford Lough Regattas,
+          bringing together the latest news, race information, and essential
+          updates for sailors of all levels.
+        </p>
 
         <p>
-          Strangford Lough is a large shallow sea lough situated on the East Coast of
-          County Down, Northern Ireland. The Lough's northern tip is only about 6km
-          from the outskirts of Belfast. Strangford Lough Regattas are run by the
-          Yacht Clubs situated around Strangford Lough, and managed by the Strangford
-          Lough Regatta Conference.
+          Set on the east coast of County Down, Strangford Lough is a vast and
+          beautiful shallow sea lough, just 6 km from the outskirts of Belfast. Its
+          unique tidal waters, stunning scenery, and challenging conditions make it
+          a truly exceptional place to race.
+        </p>
+
+        <p>
+          The Strangford Lough Regattas are proudly organised by the yacht clubs
+          around the Lough and coordinated by the Strangford Lough Regatta
+          Conference, delivering a full programme of competitive and enjoyable
+          racing throughout the season. Join us on the water and be part of the
+          tradition, competition, and camaraderie that define sailing on Strangford
+          Lough.
         </p>
 
         {/* Quick Links removed as requested */}

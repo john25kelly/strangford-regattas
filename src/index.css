@@ -257,6 +257,8 @@ nav a:hover{color:#fff;background:var(--accent-2)}
 }
 
 @media (max-width:720px){
+  .calendar{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .calendar-grid{ min-width:640px; }
   .calendar-grid{grid-template-columns:repeat(5,1fr) 1.4fr 1.4fr;gap:6px}
   .calendar-day{min-height:80px;padding:6px}
   .calendar-event{font-size:0.88rem;padding:6px}
