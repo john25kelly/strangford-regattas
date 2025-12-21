@@ -136,7 +136,7 @@ export default function Header() {
     <header className={`site-header ${open ? 'mobile-open' : ''}`}>
       <div className="header-inner">
         <div className="brand">
-          <img src="https://www.strangfordloughregattas.co.uk/favicon.ico" alt="Strangford" aria-hidden="true" />
+          <img src="public/Logo.png" alt="Strangford" aria-hidden="true" />
           {/* make the brand title non-interactive */}
           <span className="brand-link" aria-hidden="true">Strangford Lough Regattas</span>
         </div>
