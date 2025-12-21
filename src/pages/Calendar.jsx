@@ -76,8 +76,41 @@ export default function Calendar() {
 
   const eventsByDate = useMemo(() => {
     const map = {}
+
+    // helper: try to normalize event.date into an ISO yyyy-mm-dd key
+    function normalizeDateKey(d) {
+      if (!d) return null
+      // already ISO-like
+      if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d
+      // try to parse formats like "9th May 2026" or "9 May 2026"
+      const m = String(d).trim().match(/^([0-9]{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]+)\s+(\d{4})$/)
+      if (m) {
+        const day = Number(m[1])
+        const monthName = m[2].toLowerCase()
+        const year = Number(m[3])
+        const monthNames = ['january','february','march','april','may','june','july','august','september','october','november','december']
+        const mi = monthNames.indexOf(monthName)
+        if (mi >= 0) {
+          const mm = String(mi + 1).padStart(2, '0')
+          const dd = String(day).padStart(2, '0')
+          return `${year}-${mm}-${dd}`
+        }
+      }
+      // last resort: try Date.parse
+      const parsed = Date.parse(d)
+      if (!isNaN(parsed)) {
+        const dt = new Date(parsed)
+        const y = dt.getFullYear()
+        const mm = String(dt.getMonth() + 1).padStart(2, '0')
+        const dd = String(dt.getDate()).padStart(2, '0')
+        return `${y}-${mm}-${dd}`
+      }
+      return null
+    }
+
     for (const e of events) {
-      ;(map[e.date] = map[e.date] || []).push(e)
+      const key = normalizeDateKey(e.date) || e.date
+      ;(map[key] = map[key] || []).push(e)
     }
     return map
   }, [events])
@@ -93,6 +126,18 @@ export default function Calendar() {
     KYC: 'https://www.strangfordloughregattas.co.uk/documents/KYC2025.pdf',
     EDYC: 'https://www.strangfordloughregattas.co.uk/documents/EDYC2025v2.pdf',
     SLYC: 'https://www.strangfordloughregattas.co.uk/documents/slycv52025.pdf'
+  }
+
+  // Optional fallback colour map by location (used when event has no explicit `colour` field)
+  const locationColorMap = {
+    QYC: '#0b3d91',
+    EDYC: '#1e6fb8',
+    KYC: '#0b6b4a',
+    KSC: '#b84e1e',
+    NSC: '#6b3d9a',
+    SSC: '#0b5a91',
+    PSC: '#b88f1e',
+    SLYC: '#1e6fb8'
   }
 
   const months = useMemo(() => {
@@ -217,7 +262,10 @@ export default function Calendar() {
                   // compute optional inline style for event tile based on ev.colour / ev.color
                   const tileStyle = {}
                   let tileTextColor = null
-                  const rawColour = (ev.colour || ev.color || '').toString().trim()
+
+                  // normalize incoming colour and guard against non-string values
+                  const rawColour = String(ev.colour || ev.color || '').trim()
+
                   if (rawColour) {
                     const hexMatch = rawColour.match(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
                     if (hexMatch) {
@@ -242,21 +290,43 @@ export default function Calendar() {
                       tileTextColor = 'var(--muted)'
                       tileStyle.border = '1px solid rgba(0,0,0,0.04)'
                     }
+                  } else {
+                    // Fallback to location-based colour if no explicit colour is set
+                    const locationKey = ev.location || ''
+                    const fallbackColor = locationColorMap[locationKey.toUpperCase()] || null
+                    if (fallbackColor) {
+                      // blend the fallback hex toward white (same approach as explicit hex colours)
+                      let hex = fallbackColor.replace('#', '')
+                      if (hex.length === 3) hex = hex.split('').map(c => c + c).join('')
+                      const r = parseInt(hex.slice(0,2), 16)
+                      const g = parseInt(hex.slice(2,4), 16)
+                      const b = parseInt(hex.slice(4,6), 16)
+                      const blendFactor = 0.9
+                      const br = Math.round(r + (255 - r) * blendFactor)
+                      const bg = Math.round(g + (255 - g) * blendFactor)
+                      const bb = Math.round(b + (255 - b) * blendFactor)
+                      const blendedHex = '#' + [br, bg, bb].map(v => v.toString(16).padStart(2, '0')).join('')
+                      tileStyle.background = blendedHex
+                      const luminance = (0.2126 * br + 0.7152 * bg + 0.0722 * bb) / 255
+                      tileTextColor = luminance < 0.6 ? '#ffffff' : 'var(--muted)'
+                      tileStyle.border = '1px solid rgba(0,0,0,0.04)'
+                    }
                   }
-                 return (
-                  <div
-                    key={i}
-                    role="button"
-                    tabIndex={0}
-                    className="calendar-event clickable"
-                    onClick={() => setSelectedEvent({ ...ev })}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedEvent({ ...ev }) }}
-                    style={Object.keys(tileStyle).length ? tileStyle : undefined}
-                  >
-                    <div className="ev-name" style={tileTextColor ? { color: tileTextColor } : undefined}>{ev.name}</div>
-                  </div>
-                 )
-               })}
+
+                  return (
+                    <div
+                      key={i}
+                      role="button"
+                      tabIndex={0}
+                      className="calendar-event clickable"
+                      onClick={() => setSelectedEvent({ ...ev })}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedEvent({ ...ev }) }}
+                      style={Object.keys(tileStyle).length ? tileStyle : undefined}
+                    >
+                      <div className="ev-name" style={tileTextColor ? { color: tileTextColor } : undefined}>{ev.name}</div>
+                    </div>
+                  )
+                })}
 
               </div>
             )
