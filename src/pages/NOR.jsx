@@ -128,10 +128,12 @@ export default function NOR() {
           const location = norm['location'] || norm['club'] || ''
           const hwt = norm['hwt'] || norm['time'] || ''
           const pdfUrl = norm['pdfurl'] || norm['pdf url'] || norm['si'] || norm['url'] || ''
+          // support optional color/colour column (case-insensitive)
+          const colour = norm['colour'] || norm['color'] || ''
 
           const iso = parseDateToIso(dateRaw)
           if (!iso || !name) continue
-          eventsOut.push({ date: iso, name, location, hwt: hwt || undefined, pdfUrl: pdfUrl || undefined })
+          eventsOut.push({ date: iso, name, location, hwt: hwt || undefined, pdfUrl: pdfUrl || undefined, colour: colour || undefined })
         }
 
         // sort chronologically ascending (earliest first)
@@ -165,6 +167,7 @@ export default function NOR() {
             location={e.location}
             hwt={e.hwt}
             pdfUrl={e.pdfUrl}
+            colour={e.colour}
           />
         ))}
       </section>

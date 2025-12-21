@@ -213,7 +213,37 @@ export default function Calendar() {
               <div key={key} className={`calendar-day ${dayEvents.length ? 'has-event' : ''} ${key === todayKey ? 'today' : ''} ${dow === 0 || dow === 6 ? 'weekend' : ''}`}>
                 <div className="calendar-date">{c}</div>
 
-                {dayEvents.map((ev, i) => (
+                {dayEvents.map((ev, i) => {
+                  // compute optional inline style for event tile based on ev.colour / ev.color
+                  const tileStyle = {}
+                  let tileTextColor = null
+                  const rawColour = (ev.colour || ev.color || '').toString().trim()
+                  if (rawColour) {
+                    const hexMatch = rawColour.match(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
+                    if (hexMatch) {
+                      let hex = hexMatch[1]
+                      if (hex.length === 3) hex = hex.split('').map(c => c + c).join('')
+                      const r = parseInt(hex.slice(0,2), 16)
+                      const g = parseInt(hex.slice(2,4), 16)
+                      const b = parseInt(hex.slice(4,6), 16)
+                      // blend toward white to make the tint pale
+                      const blendFactor = 0.9
+                      const br = Math.round(r + (255 - r) * blendFactor)
+                      const bg = Math.round(g + (255 - g) * blendFactor)
+                      const bb = Math.round(b + (255 - b) * blendFactor)
+                      const blendedHex = '#' + [br, bg, bb].map(v => v.toString(16).padStart(2, '0')).join('')
+                      tileStyle.background = blendedHex
+                      const luminance = (0.2126 * br + 0.7152 * bg + 0.0722 * bb) / 255
+                      tileTextColor = luminance < 0.6 ? '#ffffff' : 'var(--muted)'
+                      tileStyle.border = '1px solid rgba(0,0,0,0.04)'
+                    } else {
+                      // for non-hex values apply a pale white overlay
+                      tileStyle.background = `linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)), ${rawColour}`
+                      tileTextColor = 'var(--muted)'
+                      tileStyle.border = '1px solid rgba(0,0,0,0.04)'
+                    }
+                  }
+                 return (
                   <div
                     key={i}
                     role="button"
@@ -221,10 +251,13 @@ export default function Calendar() {
                     className="calendar-event clickable"
                     onClick={() => setSelectedEvent({ ...ev })}
                     onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedEvent({ ...ev }) }}
+                    style={Object.keys(tileStyle).length ? tileStyle : undefined}
                   >
-                    <div className="ev-name">{ev.name}</div>
+                    <div className="ev-name" style={tileTextColor ? { color: tileTextColor } : undefined}>{ev.name}</div>
                   </div>
-                ))}
+                 )
+               })}
+
               </div>
             )
           })}
