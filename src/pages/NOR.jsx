@@ -1,88 +1,171 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import Papa from 'papaparse'
 import NORTile from '../components/NORTile'
 
-const programs = [
-  {
-    id: 1,
-    title: 'Newtownards SC',
-    date: '14th June',
-    location: 'Newtownards',
-    pdfUrl: 'https://www.strangfordloughregattas.co.uk/documents/NSC2025.pdf'
-  },
-  {
-    id: 2,
-    title: 'Quoile YC',
-    date: '21st June',
-    location: 'Quoile',
-    pdfUrl: 'https://www.strangfordloughregattas.co.uk/documents/QYC2025.pdf'
-  },
-  {
-    id: 3,
-    title: 'Kircubbin SC',
-    date: '28th June',
-    location: 'Kircubbin',
-    pdfUrl: 'https://www.strangfordloughregattas.co.uk/documents/KSC2025.pdf'
-  },
-  {
-    id: 4,
-    title: 'Bar Buoy',
-    date: '10th July',
-    location: 'Bar Buoy',
-    pdfUrl: 'https://www.strangfordloughregattas.co.uk/documents/BarBuoy2025.pdf'
-  },
-  {
-    id: 5,
-    title: 'Strangford SC',
-    date: '11th July',
-    location: 'Strangford',
-    pdfUrl: 'https://www.strangfordloughregattas.co.uk/documents/SSC2025.pdf'
-  },
-  {
-    id: 6,
-    title: 'Portaferry Town',
-    date: '12th July',
-    location: 'Portaferry',
-    pdfUrl: 'https://www.strangfordloughregattas.co.uk/documents/PTR2025.pdf'
-  },
-  {
-    id: 7,
-    title: 'Portaferry SC',
-    date: '13th July',
-    location: 'Portaferry',
-    pdfUrl: 'https://www.strangfordloughregattas.co.uk/documents/PSC2025.pdf'
-  },
-  {
-    id: 8,
-    title: 'Killyleagh YC',
-    date: '26th July',
-    location: 'Killyleagh',
-    pdfUrl: 'https://www.strangfordloughregattas.co.uk/documents/KYC2025.pdf'
-  },
-  {
-    id: 9,
-    title: 'East Down YC',
-    date: '2nd August',
-    location: 'East Down',
-    pdfUrl: 'https://www.strangfordloughregattas.co.uk/documents/EDYC2025v2.pdf'
-  },
-  {
-    id: 10,
-    title: 'Strangford Lough YC',
-    date: '9th August',
-    location: 'Strangford Lough YC',
-    pdfUrl: 'https://www.strangfordloughregattas.co.uk/documents/slycv52025.pdf'
+// Helper: format ISO date (YYYY-MM-DD) into "12th July 2026"
+function formatDateWithOrdinal(iso) {
+  if (!iso) return ''
+  const parts = String(iso).split('-')
+  if (parts.length < 3) return iso
+  const y = parseInt(parts[0], 10)
+  const m = parseInt(parts[1], 10) - 1
+  const d = parseInt(parts[2], 10)
+  const date = new Date(y, m, d)
+  const day = date.getDate()
+  const month = date.toLocaleString(undefined, { month: 'long' })
+  const year = date.getFullYear()
+  function ordinal(n) {
+    const s = ['th','st','nd','rd']
+    const v = n % 100
+    return n + (s[(v - 20) % 10] || s[v] || s[0])
   }
-]
+  return `${ordinal(day)} ${month}${year ? ' ' + year : ''}`
+}
+
+// Best-effort date parser to produce YYYY-MM-DD (copied from calendar page)
+function parseDateToIso(str) {
+  if (!str) return null
+  let s = String(str).trim()
+  s = s.replace(/(\d{1,2})(st|nd|rd|th)\b/gi, '$1')
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+  if (/^\d+(?:\.\d+)?$/.test(s)) {
+    const n = Math.floor(Number(s))
+    const epoch = new Date(Date.UTC(1899, 11, 30))
+    const dt = new Date(epoch.getTime() + n * 24 * 60 * 60 * 1000)
+    const y = dt.getFullYear()
+    const m = String(dt.getMonth() + 1).padStart(2, '0')
+    const d = String(dt.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+  const dtAuto = new Date(s)
+  if (!isNaN(dtAuto.getTime())) {
+    const y = dtAuto.getFullYear()
+    const m = String(dtAuto.getMonth() + 1).padStart(2, '0')
+    const d = String(dtAuto.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+  const m1 = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/)
+  if (m1) {
+    const a = parseInt(m1[1], 10)
+    const b = parseInt(m1[2], 10)
+    const yr = parseInt(m1[3], 10)
+    function buildIso(year, month1based, day) {
+      if (month1based < 1 || month1based > 12) return null
+      if (day < 1 || day > 31) return null
+      const dt = new Date(year, month1based - 1, day)
+      if (dt.getFullYear() !== year || dt.getMonth() + 1 !== month1based || dt.getDate() !== day) return null
+      const mm = String(dt.getMonth() + 1).padStart(2, '0')
+      const dd = String(dt.getDate()).padStart(2, '0')
+      return `${year}-${mm}-${dd}`
+    }
+    if (a > 12 && b <= 12) return buildIso(yr, b, a)
+    if (b > 12 && a <= 12) return buildIso(yr, a, b)
+    let tryIso = buildIso(yr, a, b)
+    if (tryIso) return tryIso
+    tryIso = buildIso(yr, b, a)
+    if (tryIso) return tryIso
+  }
+  return null
+}
+
+function normalizeToCsvUrl(url) {
+  if (!url) return url
+  try {
+    if (/\/export\?/i.test(url)) return url
+    const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/)
+    const id = m ? m[1] : null
+    const gidMatch = url.match(/[?&]gid=(\d+)/)
+    const gid = gidMatch ? gidMatch[1] : '0'
+    if (id) return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`
+    return url
+  } catch (err) {
+    return url
+  }
+}
 
 export default function NOR() {
+  const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1aJbtVHiTU1XrvAq1aW7ZJ2kxeRPzdDFi29Xq55htjg4/edit?usp=sharing'
+  const csvUrl = normalizeToCsvUrl(SHEET_URL)
+
+  const [events, setEvents] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    async function fetchCsv() {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch(csvUrl)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const text = await res.text()
+        let parsed = Papa.parse(text, { header: true, skipEmptyLines: true })
+        let data = parsed.data || []
+
+        const firstHeader = (parsed.meta && parsed.meta.fields && parsed.meta.fields[0]) || ''
+        const looksLikeDateHeader = /^(\d{1,2}(st|nd|rd|th)?\s+\w+\s+\d{4}|\d{4}-\d{2}-\d{2})/i.test(firstHeader)
+        if (data.length === 0 || looksLikeDateHeader) {
+          const parsedNoHeader = Papa.parse(text, { header: false, skipEmptyLines: true })
+          const rowsArr = parsedNoHeader.data || []
+          data = rowsArr.map(r => ({
+            date: (r[0] || '').toString(),
+            name: (r[1] || '').toString(),
+            location: (r[2] || '').toString(),
+            hwt: (r[3] || '').toString(),
+            tide: (r[4] || '').toString(),
+            pdfUrl: (r[5] || '').toString()
+          }))
+        }
+
+        const eventsOut = []
+        for (const r of data) {
+          const norm = {}
+          for (const k of Object.keys(r)) norm[k.trim().toLowerCase()] = (r[k] || '').toString().trim()
+
+          const dateRaw = norm['date'] || norm['day'] || norm['event date'] || norm['start date'] || ''
+          const name = norm['name'] || norm['event'] || norm['title'] || ''
+          const location = norm['location'] || norm['club'] || ''
+          const hwt = norm['hwt'] || norm['time'] || ''
+          const pdfUrl = norm['pdfurl'] || norm['pdf url'] || norm['si'] || norm['url'] || ''
+
+          const iso = parseDateToIso(dateRaw)
+          if (!iso || !name) continue
+          eventsOut.push({ date: iso, name, location, hwt: hwt || undefined, pdfUrl: pdfUrl || undefined })
+        }
+
+        // sort chronologically ascending (earliest first)
+        eventsOut.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+
+        if (!cancelled) setEvents(eventsOut)
+      } catch (err) {
+        if (!cancelled) setError(String(err))
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchCsv()
+    return () => { cancelled = true }
+  }, [csvUrl])
+
   return (
     <div className="page nor">
       <h1>NOR and Sailing Instructions</h1>
-      <p className="muted">Regatta Programs 2025 — click View to open or Download to save the PDF.</p>
+      <p className="muted">Regatta Programs — pulled from the shared spreadsheet. Click View to open or Download to save the PDF.</p>
+
+      {loading && <p className="muted">Loading events from sheet…</p>}
+      {error && <p className="muted">Error loading sheet: {error}</p>}
 
       <section className="nor-grid">
-        {programs.map(p => (
-          <NORTile key={p.id} title={`${p.title} - ${p.date}`} date={p.date} location={p.location} pdfUrl={p.pdfUrl} />
+        {events.map((e, idx) => (
+          <NORTile
+            key={`${e.date}-${idx}`}
+            title={`${e.name} - ${formatDateWithOrdinal(e.date)}`}
+            date={formatDateWithOrdinal(e.date)}
+            location={e.location}
+            hwt={e.hwt}
+            pdfUrl={e.pdfUrl}
+          />
         ))}
       </section>
 

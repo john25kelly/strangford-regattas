@@ -1,16 +1,24 @@
 import React from 'react'
 
-export default function NORTile({ title, date, location, pdfUrl }) {
+export default function NORTile({ title, date, location, hwt, pdfUrl }) {
+  const siAvailable = !!pdfUrl
+
   return (
     <article className="nor-tile">
       <h3>{title}</h3>
       {date && <p className="muted">{date}</p>}
       {location && <p className="muted">{location}</p>}
+      {hwt && <p><strong>HWT:</strong> {hwt}</p>}
+
+      {(!hwt || !siAvailable) && (
+        <p className="muted" style={{ marginTop: 8 }}>
+          <strong>Note:</strong> The SI is not yet available for this event
+        </p>
+      )}
+
       <div className="tile-actions">
         <button
-          onClick={() => {
-            if (pdfUrl) window.open(pdfUrl, '_blank')
-          }}
+          onClick={() => { if (pdfUrl) window.open(pdfUrl, '_blank') }}
           disabled={!pdfUrl}
         >
           View
@@ -29,4 +37,3 @@ export default function NORTile({ title, date, location, pdfUrl }) {
     </article>
   )
 }
-
