@@ -1,4 +1,4 @@
-# Strangford Regattas (Vite + React)
+# Strangford Lough Regattas (Vite + React)
 
 Local dev instructions
 

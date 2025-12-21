@@ -138,7 +138,7 @@ export default function Header() {
         <div className="brand">
           <img src="https://www.strangfordloughregattas.co.uk/favicon.ico" alt="Strangford" aria-hidden="true" />
           {/* make the brand title non-interactive */}
-          <span className="brand-link" aria-hidden="true">Strangford Regattas</span>
+          <span className="brand-link" aria-hidden="true">Strangford Lough Regattas</span>
         </div>
 
         {/* mobile menu toggle (visible on small screens) */}
