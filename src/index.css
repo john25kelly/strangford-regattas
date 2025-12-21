@@ -68,10 +68,20 @@ nav a:hover{color:#fff;background:var(--accent-2)}
   background:var(--accent);
   color:#fff;
   border-color:var(--accent);
-  box-shadow:0 1px 0 rgba(11,61,145,0.08);
+  box-shadow:0 10px 30px rgba(11,61,145,0.18);
+  font-weight:700;
+  transform:translateY(-2px);
+  transition:transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+  border-radius:8px;
 }
 
 .btn-link.active:hover{background:var(--accent)}
+
+/* Make keyboard focus visible for buttons (improves accessibility) */
+.btn-link:focus-visible{
+  outline:3px solid rgba(30,111,184,0.14);
+  outline-offset:2px;
+}
 
 /* iframe */
 .iframe-wrap{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-top:12px}
