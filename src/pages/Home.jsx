@@ -206,11 +206,19 @@ export default function Home() {
 
         {/* WhatsApp QR code (put the image at public/whatsapp-qr.jpg) */}
         <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,marginTop:20}}>
-          <img
-            src={imgSrc}
-            alt="WhatsApp group QR code for Strangford Lough Regatta"
-            style={{maxWidth:360,width:'100%',height:'auto',borderRadius:8,boxShadow:'0 6px 18px rgba(0,0,0,0.1)'}}
-          />
+          <a
+            href="https://chat.whatsapp.com/KztLCaVYPuN2cM0ha25xHE"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Join WhatsApp group"
+            title="Join the Strangford Lough Regatta WhatsApp group"
+          >
+            <img
+              src={imgSrc}
+              alt="WhatsApp group QR code for Strangford Lough Regatta"
+              style={{maxWidth:360,width:'100%',height:'auto',borderRadius:8,boxShadow:'0 6px 18px rgba(0,0,0,0.1)'}}
+            />
+          </a>
           <p className="muted" style={{textAlign:'center',maxWidth:600}}>
             This QR code joins the Strangford Lough Regatta WhatsApp group — scan it with your phone to join the group.
           </p>
