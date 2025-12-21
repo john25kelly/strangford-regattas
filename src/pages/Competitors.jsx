@@ -268,14 +268,6 @@ export default function Competitors() {
             >
               {sheetOptions.map(s => <option key={s.label} value={s.label}>{s.label}</option>)}
             </select>
-
-            <a
-              className="btn-link"
-              style={{marginLeft:8}}
-              href={`https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?gid=${selectedSheet}`}
-              target="_blank"
-              rel="noreferrer"
-            >Open selected tab</a>
           </div>
         </div>
 
