@@ -172,9 +172,20 @@ export default function Calendar() {
       <div style={{display:'flex',gap:12,alignItems:'center',marginBottom:12,flexWrap:'wrap'}}>
         <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
           <strong className="muted">Jump to month:</strong>
-          {months.map((m,i) => (
-            <button key={i} type="button" onClick={() => setCurrent(new Date(m))} className="btn-link">{monthTitle(m)}</button>
-          ))}
+          {months.map((m,i) => {
+            const isActive = m.getFullYear() === current.getFullYear() && m.getMonth() === current.getMonth()
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setCurrent(new Date(m))}
+                className={`btn-link ${isActive ? 'active' : ''}`}
+                aria-pressed={isActive}
+              >
+                {monthTitle(m)}
+              </button>
+            )
+          })}
         </div>
       </div>
 
