@@ -87,6 +87,9 @@ nav a:hover{color:#fff;background:var(--accent-2)}
   cursor:pointer;
   border-radius:8px;
   transition: background 160ms ease, transform 160ms ease;
+  /* make the three spans stack vertically like a traditional hamburger */
+  flex-direction:column;
+  gap:6px;
 }
 .menu-toggle:hover{background:rgba(11,61,145,0.06)}
 .menu-toggle:focus{outline:2px solid rgba(30,111,184,0.12);outline-offset:2px}

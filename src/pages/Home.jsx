@@ -6,7 +6,7 @@ export default function Home() {
 
   return (
     <div className="page home">
-      <h1>Welcome to Strangford Regattas</h1>
+      <h1>Welcome to Strangford Lough Regattas</h1>
       <section className="home-content">
         <p>
           Discover one of Northern Ireland’s most distinctive and rewarding sailing
