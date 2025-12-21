@@ -166,11 +166,10 @@ export default function Home() {
       const now = new Date()
       const diff = target.getTime() - now.getTime()
       if (diff <= 0) { setCountdown('Today!'); return }
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-      const hrs = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-      const secs = Math.floor((diff % (1000 * 60)) / 1000)
-      setCountdown(`${days}d ${String(hrs).padStart(2,'0')}h:${String(mins).padStart(2,'0')}m:${String(secs).padStart(2,'0')}s`)
+      // show only days (rounded up so a partial day counts as 1 day)
+      const days = Math.ceil(diff / (1000 * 60 * 60 * 24))
+      // singular/plural handling: '1 day!!!' vs 'N days!!!'
+      setCountdown(days === 1 ? '1 day!!!' : `${days} days!!!`)
     }
     updateCountdown()
     timer = setInterval(updateCountdown, 1000)
