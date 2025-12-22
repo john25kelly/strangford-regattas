@@ -153,7 +153,6 @@ export default function NOR() {
   return (
     <div className="page nor">
       <h1>NOR and Sailing Instructions</h1>
-      <p className="muted">Regatta Programs — pulled from the shared spreadsheet. Click View to open or Download to save the PDF.</p>
 
       {loading && <p className="muted">Loading events from sheet…</p>}
       {error && <p className="muted">Error loading sheet: {error}</p>}
