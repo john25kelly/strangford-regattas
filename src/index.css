@@ -53,6 +53,15 @@ nav a:hover{color:#fff;background:var(--accent-2)}
 
 /* NOR grid */
 .nor-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:16px}
+
+/* Force a three-column layout on sufficiently wide viewports so the NOR page can show 3 tiles side-by-side */
+@media (min-width: 900px) {
+  .nor-grid {
+    /* Use three equal columns but allow them to shrink no smaller than 240px */
+    grid-template-columns: repeat(3, minmax(240px, 1fr));
+  }
+}
+
 .nor-tile{background:var(--card);padding:16px;border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;gap:10px}
 .nor-tile h3{margin:0;font-size:1.05rem}
 .tile-actions{margin-top:auto;display:flex;gap:8px}
