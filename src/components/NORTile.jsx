@@ -27,6 +27,7 @@ export default function NORTile({ title, date, location, hwt, pdfUrl, colour }) 
 
       // set the blended background color
       const blendedHex = '#' + [br, bg, bb].map(v => v.toString(16).padStart(2, '0')).join('')
+      // store blended hex as backgroundColor (so we can layer an image on top)
       tileStyle.background = blendedHex
 
       // recompute luminance on the blended color for readable text color
@@ -42,6 +43,34 @@ export default function NORTile({ title, date, location, hwt, pdfUrl, colour }) 
       tileTextColor = 'var(--muted)'
       tileStyle.border = '1px solid rgba(0,0,0,0.06)'
     }
+  }
+
+  // If the event title contains "Leisure 17", layer a semi-transparent image behind the tile content
+  try {
+    const isLeisure17 = typeof title === 'string' && /leisure\s*17/i.test(title)
+    if (isLeisure17) {
+      // Resolve public asset URL (Vite-friendly)
+      const leisureUrl = new URL('/Leisure_17.jpg', import.meta.url).href
+
+      // Preserve any computed background color (hex) separately so we can layer the image on top
+      const existingBg = tileStyle.background
+      if (existingBg && typeof existingBg === 'string' && existingBg.startsWith('#')) {
+        tileStyle.backgroundColor = existingBg
+      } else if (existingBg && typeof existingBg === 'string' && existingBg.startsWith('linear-gradient')) {
+        // if existing background is a gradient, clear it to avoid conflicts and instead use as backgroundImage layering
+      }
+
+      // Apply a gentle white overlay over the image so the image is pale and text remains readable
+      // We set the backgroundImage to the overlay gradient plus the image. backgroundColor (if set) remains as base.
+      tileStyle.backgroundImage = `linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.7)), url(${leisureUrl})`
+      tileStyle.backgroundRepeat = 'no-repeat'
+      tileStyle.backgroundPosition = 'center'
+      tileStyle.backgroundSize = 'contain'
+      // ensure the image doesn't obscure border/spacing
+      tileStyle.backgroundBlendMode = 'normal'
+    }
+  } catch (err) {
+    // ignore any runtime issues resolving the image URL in non-browser environments
   }
 
   // action button/link styles to ensure contrast on coloured tiles
