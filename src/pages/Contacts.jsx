@@ -1,10 +1,7 @@
 import React from 'react'
 import ContactTile from '../components/ContactTile'
 
-// Resolve public asset for Chairman background (Vite-friendly)
-const bossBg = new URL('/JP2.png', import.meta.url).href
-
-// Updated contact list provided by the user. Website values are normalized to include https:// when missing.
+// Helper to normalize website strings into absolute URLs (add https:// when missing)
 const normalizeWebsite = (w) => {
   if (!w) return null
   const s = String(w).trim()
@@ -14,8 +11,8 @@ const normalizeWebsite = (w) => {
 }
 
 const contacts = [
-  // Chairman (display as "The Boss") with background image
-  { id: 1, name: 'John Patterson', heading: 'The Boss', phone: '07498724747', email: 'rcsailing@edyc.co.uk', website: null, backgroundImage: bossBg },
+  // Chairman (restored)
+  { id: 1, name: 'John Patterson', heading: 'Chairman', phone: '07498724747', email: 'rcsailing@edyc.co.uk', website: null },
   // Secretary (Ian Bogie) with heading
   { id: 2, name: 'Ian Bogie', heading: 'Secretary', phone: '+44 7968 858164', email: 'ian.bogie@btinternet.com', website: null },
   { id: 3, name: 'East Down Yacht Club', role: 'Club Rep: James Curran', phone: '+44 7887 707913', email: 'info@edyc.co.uk', website: normalizeWebsite('edyc.co.uk') },
@@ -34,7 +31,7 @@ export default function Contacts() {
       <h1>Contacts</h1>
       <section className="nor-grid">
         {contacts.map(c => (
-          <ContactTile key={c.id} name={c.name} role={c.role} heading={c.heading} phone={c.phone} email={c.email} website={c.website} backgroundImage={c.backgroundImage} />
+          <ContactTile key={c.id} name={c.name} role={c.role} heading={c.heading} phone={c.phone} email={c.email} website={c.website} />
         ))}
       </section>
 
