@@ -3,8 +3,21 @@ import React from 'react'
 export default function ContactTile({ name, role, phone, email, website, heading }) {
     // normalize phone for tel: links (preserve leading +, strip other non-digits)
     const telHref = phone ? String(phone).replace(/[^\d+]/g, '') : null
-    // ensure displayed phone shows a leading '+' for international format
-    const displayPhone = phone ? String(phone).replace(/^\+?/, '+') : null
+    // ensure displayed phone shows a leading '+' only when appropriate:
+    // - if the phone already starts with '+' keep it
+    // - if the phone starts with country code '44' (optionally with spaces) prefix '+'
+    // - otherwise show the phone as provided (to avoid turning '07...' into '+07...')
+    let displayPhone = null
+    if (phone) {
+      const s = String(phone).trim()
+      if (s.startsWith('+')) {
+        displayPhone = s
+      } else if (/^44\b|^44\s|^44\d/.test(s)) {
+        displayPhone = `+${s}`
+      } else {
+        displayPhone = s
+      }
+    }
     // sanitize role to remove any leading '-' characters the user doesn't want shown
     const roleSanitized = role ? String(role).replace(/^\s*[-–—]\s*/, '') : role
     return (
