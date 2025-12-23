@@ -268,14 +268,6 @@ export default function Competitors() {
             >
               {sheetOptions.map(s => <option key={s.label} value={s.label}>{s.label}</option>)}
             </select>
-
-            <a
-              className="btn-link"
-              style={{marginLeft:8}}
-              href={`https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?gid=${selectedSheet}`}
-              target="_blank"
-              rel="noreferrer"
-            >Open selected tab</a>
           </div>
         </div>
 
@@ -333,6 +325,12 @@ export default function Competitors() {
             <p className="muted" style={{marginTop:8}}>Showing {Math.min((page-1)*pageSize+1, total)}–{Math.min(page*pageSize, total)} of {total} entries</p>
           </div>
         )}
+
+        <div className="info-panel" role="note" aria-live="polite">
+          <p className="muted" style={{margin:0}}>
+            It is extremely important that your boat is on the lists below if you wish to race in the Strangford Lough Regattas during the year. All information must be up-to-date or you risk not getting a place in the race. If a boat is not on the list the owner (inside lough boats) should contact his/her Club Sailing Sec who will give them a handicap etc. The Club Sailing Sec will contact the SLRC Boat List Coordinator with the alteration and the web shall be updated. If a boat from outside the lough wants to race then the owner should contact the Sailing Sec of the club who is organising the event with boat details and handicap. Proof may be required.
+          </p>
+        </div>
       </section>
 
       {/* Debug info panel (temporary) */}

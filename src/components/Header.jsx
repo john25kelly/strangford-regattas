@@ -8,6 +8,22 @@ export default function Header() {
   const navRef = useRef(null)
   const previouslyFocused = useRef(null)
 
+  // Resolve public asset in a Vite-friendly way so base paths are respected
+  const logo = new URL('/SLRC_Logo.jpg', import.meta.url).href
+
+  // determine whether we should use the "mobile" (hamburger) UI
+  const [isMobile, setIsMobile] = useState(() => {
+    try {
+      const touch = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer:coarse)').matches
+      const small = typeof window !== 'undefined' && window.innerWidth <= 720
+      const ua = typeof navigator !== 'undefined' ? (navigator.userAgent || '') : ''
+      const uaMobile = /Mobi|Android|iPhone|iPad|iPod/.test(ua)
+      return !!(touch || small || uaMobile)
+    } catch (err) {
+      return false
+    }
+  })
+
   const close = () => setOpen(false)
 
   // Close menu on route change
@@ -15,10 +31,29 @@ export default function Header() {
     close()
   }, [location.pathname])
 
-  // Close menu when viewport expands beyond mobile breakpoint
+  // detect device capability (update on resize/orientation change)
+  useEffect(() => {
+    function detectMobile() {
+      const touch = window.matchMedia && window.matchMedia('(pointer:coarse)').matches
+      const small = window.innerWidth <= 720
+      const ua = navigator.userAgent || ''
+      const uaMobile = /Mobi|Android|iPhone|iPad|iPod/.test(ua)
+      setIsMobile(!!(touch || small || uaMobile))
+    }
+    detectMobile()
+    window.addEventListener('resize', detectMobile)
+    window.addEventListener('orientationchange', detectMobile)
+    return () => {
+      window.removeEventListener('resize', detectMobile)
+      window.removeEventListener('orientationchange', detectMobile)
+    }
+  }, [])
+
+  // Close menu when viewport expands beyond mobile breakpoint *for non-touch* devices
   useEffect(() => {
     function onResize() {
-      if (window.innerWidth > 720 && open) {
+      // if we're not considered mobile and the viewport is wide, ensure menu is closed
+      if (!isMobile && window.innerWidth > 720 && open) {
         setOpen(false)
       }
     }
@@ -31,7 +66,7 @@ export default function Header() {
       window.removeEventListener('resize', onResize)
       window.removeEventListener('keydown', onKey)
     }
-  }, [open])
+  }, [open, isMobile])
 
   // Outside click handler + focus management + body scroll lock
   useEffect(() => {
@@ -104,9 +139,9 @@ export default function Header() {
     <header className={`site-header ${open ? 'mobile-open' : ''}`}>
       <div className="header-inner">
         <div className="brand">
-          <img src="https://www.strangfordloughregattas.co.uk/favicon.ico" alt="Strangford" aria-hidden="true" />
+          <img src={logo} alt="Strangford Lough Regattas" aria-hidden="true" />
           {/* make the brand title non-interactive */}
-          <span className="brand-link" aria-hidden="true">Strangford Regattas</span>
+          <span className="brand-link" aria-hidden="true">Strangford Lough Regattas</span>
         </div>
 
         {/* mobile menu toggle (visible on small screens) */}
@@ -129,12 +164,12 @@ export default function Header() {
           aria-label="Main Navigation"
           onClick={close}
           ref={navRef}
-          aria-hidden={!open && window.innerWidth <= 720}
+          aria-hidden={!open && isMobile}
         >
           <NavLink to="/" end className={({isActive}) => isActive ? 'active' : ''}>Home</NavLink>
           <NavLink to="/nor" className={({isActive}) => isActive ? 'active' : ''}>NOR and SIs</NavLink>
           <NavLink to="/results" className={({isActive}) => isActive ? 'active' : ''}>Results</NavLink>
-          <NavLink to="/gallery" className={({isActive}) => isActive ? 'active' : ''}>Gallery</NavLink>
+          <NavLink to="/calendar" className={({isActive}) => isActive ? 'active' : ''}>Calendar</NavLink>
           <NavLink to="/contacts" className={({isActive}) => isActive ? 'active' : ''}>Contacts</NavLink>
           <NavLink to="/competitors" className={({isActive}) => isActive ? 'active' : ''}>Competitors</NavLink>
         </nav>
