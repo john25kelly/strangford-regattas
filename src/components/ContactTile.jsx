@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function ContactTile({ name, role, phone, email, website, heading }) {
+export default function ContactTile({ name, role, phone, email, website, heading, backgroundImage }) {
     // normalize phone for tel: links (preserve leading +, strip other non-digits)
     const telHref = phone ? String(phone).replace(/[^\d+]/g, '') : null
     // ensure displayed phone shows a leading '+' only when appropriate:
@@ -20,25 +20,35 @@ export default function ContactTile({ name, role, phone, email, website, heading
     }
     // sanitize role to remove any leading '-' characters the user doesn't want shown
     const roleSanitized = role ? String(role).replace(/^\s*[-–—]\s*/, '') : role
+
+    // prepare optional inline style for a background image if provided
+    const tileStyle = {}
+    if (backgroundImage) {
+      // use a pale white overlay to keep text readable, image sized to contain and centered
+      tileStyle.backgroundImage = `linear-gradient(rgba(255,255,255,0.65), rgba(255,255,255,0.65)), url(${backgroundImage})`
+      tileStyle.backgroundRepeat = 'no-repeat'
+      tileStyle.backgroundPosition = 'center'
+      tileStyle.backgroundSize = 'contain'
+    }
     return (
-      <article className="nor-tile contact-tile">
-      {/* If a heading prop is provided, use it as the main title and show the name below */}
-      {heading ? (
-        <>
-          <h3>{heading}</h3>
-          <p className="muted" style={{marginTop:4}}>{name}</p>
-        </>
-      ) : (
-        <>
-          <h3>{name}</h3>
-          {roleSanitized && roleSanitized.toString().trim().toLowerCase() !== 'club' && <p className="muted">{roleSanitized}</p>}
-        </>
-      )}
-      <div className="contact-details">
-       {phone && <p className="muted">Phone: <a href={`tel:${telHref}`}>{displayPhone}</a></p>}
-        {email && <p className="muted">Email: <a href={`mailto:${email}`}>{email}</a></p>}
-        {website && <p className="muted">Website: <a href={website} target="_blank" rel="noreferrer">{website}</a></p>}
-      </div>
-    </article>
-  )
+      <article className="nor-tile contact-tile" style={Object.keys(tileStyle).length ? tileStyle : undefined}>
+       {/* If a heading prop is provided, use it as the main title and show the name below */}
+       {heading ? (
+         <>
+           <h3>{heading}</h3>
+           <p className="muted" style={{marginTop:4}}>{name}</p>
+         </>
+       ) : (
+         <>
+           <h3>{name}</h3>
+           {roleSanitized && roleSanitized.toString().trim().toLowerCase() !== 'club' && <p className="muted">{roleSanitized}</p>}
+         </>
+       )}
+       <div className="contact-details">
+        {phone && <p className="muted">Phone: <a href={`tel:${telHref}`}>{displayPhone}</a></p>}
+         {email && <p className="muted">Email: <a href={`mailto:${email}`}>{email}</a></p>}
+         {website && <p className="muted">Website: <a href={website} target="_blank" rel="noreferrer">{website}</a></p>}
+       </div>
+     </article>
+   )
  }
