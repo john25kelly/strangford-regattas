@@ -9,7 +9,7 @@ export default function Header() {
   const previouslyFocused = useRef(null)
 
   // Resolve public asset in a Vite-friendly way so base paths are respected
-  const logo = new URL('/Logo.png', import.meta.url).href
+  const logo = new URL('/SLRC_Logo.jpg', import.meta.url).href
 
   // determine whether we should use the "mobile" (hamburger) UI
   const [isMobile, setIsMobile] = useState(() => {
@@ -139,7 +139,7 @@ export default function Header() {
     <header className={`site-header ${open ? 'mobile-open' : ''}`}>
       <div className="header-inner">
         <div className="brand">
-          <img src={logo} alt="Strangford" aria-hidden="true" />
+          <img src={logo} alt="Strangford Lough Regattas" aria-hidden="true" />
           {/* make the brand title non-interactive */}
           <span className="brand-link" aria-hidden="true">Strangford Lough Regattas</span>
         </div>
