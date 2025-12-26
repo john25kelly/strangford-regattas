@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import Papa from 'papaparse'
+import EventTile from '../components/EventTile'
+import EventModal from '../components/EventModal'
 
 // Helper: format ISO date (YYYY-MM-DD) into "12th July 2026"
 function formatDateWithOrdinal(iso) {
@@ -92,6 +94,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [countdown, setCountdown] = useState('')
+  const [selectedEvent, setSelectedEvent] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -130,7 +133,15 @@ export default function Home() {
 
           const iso = parseDateToIso(dateRaw)
           if (!iso || !name) continue
-          eventsOut.push({ date: iso, name })
+          // Keep additional fields for modal (location, hwt, tide, pdfUrl)
+          eventsOut.push({
+            date: iso,
+            name,
+            location: norm['location'] || norm['venue'] || '',
+            hwt: norm['hwt'] || norm['hwt time'] || '',
+            tide: norm['tide'] || '',
+            pdfUrl: norm['pdfurl'] || norm['pdf'] || norm['si'] || ''
+          })
         }
 
         eventsOut.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
@@ -181,7 +192,7 @@ export default function Home() {
       <h1>Welcome to Strangford Lough Regattas</h1>
       <section className="home-content">
 
-        {/* New tile with next 4 upcoming events */}
+        {/* Upcoming events section: countdown above 4 small event tiles */}
         <div className="nor-tile" style={{marginBottom:16}}>
           <h3>Upcoming Events</h3>
           <p className="muted">Get ready — racing season is coming! Here are the next events:</p>
@@ -189,19 +200,22 @@ export default function Home() {
           {loading && <p className="muted">Loading events…</p>}
           {error && <p className="muted">Error loading events: {error}</p>}
 
-          {!loading && !error && (
-            <ol style={{paddingLeft:18, marginTop:8}}>
-              {upcoming.length === 0 && <li className="muted">No upcoming events found</li>}
-              {upcoming.map((ev, i) => (
-                <li key={`${ev.date}-${i}`} style={{marginBottom:6}}>
-                  <strong>{ev.name}</strong>
-                  <div className="muted">{formatDateWithOrdinal(ev.date)}</div>
-                </li>
-              ))}
-            </ol>
-          )}
-
           <div style={{marginTop:12, fontWeight:700}}>Countdown to next event: <span style={{color:'var(--accent)'}}>{countdown}</span></div>
+
+          {!loading && !error && (
+            <div style={{display:'flex',gap:12,flexWrap:'wrap',marginTop:12}}>
+              {upcoming.length === 0 && <div className="muted">No upcoming events found</div>}
+              {upcoming.map((ev, i) => (
+                <EventTile
+                  key={`${ev.date}-${i}`}
+                  ev={ev}
+                  dateLabel={formatDateWithOrdinal(ev.date)}
+                  className="full-width-mobile"
+                  onClick={(e) => setSelectedEvent({ ...e })}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* WhatsApp QR code (put the image at public/whatsapp-qr.jpg) */}
@@ -224,7 +238,12 @@ export default function Home() {
           </p>
         </div>
 
+        {/* Use shared EventModal component for details */}
+        {selectedEvent && (
+          <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+        )}
+
        </section>
-    </div>
-  )
-}
+     </div>
+   )
+ }

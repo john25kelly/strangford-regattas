@@ -1,5 +1,7 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import eventsData from '../data/events.json'
+import EventTile from '../components/EventTile'
+import EventModal from '../components/EventModal'
 
 // Helper: format month title
 function monthTitle(d) {
@@ -60,8 +62,6 @@ export default function Calendar() {
   const [current, setCurrent] = useState(() => loadSavedCurrent())
   const [events] = useState(eventsData)
   const [selectedEvent, setSelectedEvent] = useState(null)
-  const modalCloseRef = useRef(null)
-  const previouslyFocused = useRef(null)
 
   // Persist the current month when it changes
   useEffect(() => {
@@ -162,35 +162,6 @@ export default function Calendar() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  useEffect(() => {
-    if (!selectedEvent) {
-      try { if (previouslyFocused.current && previouslyFocused.current.focus) previouslyFocused.current.focus() } catch (err) {}
-      document.body.style.overflow = ''
-      return
-    }
-    previouslyFocused.current = document.activeElement
-    document.body.style.overflow = 'hidden'
-    setTimeout(() => { if (modalCloseRef.current && modalCloseRef.current.focus) modalCloseRef.current.focus() }, 0)
-
-    function trap(e) {
-      if (e.key !== 'Tab') return
-      const modal = document.querySelector('.modal')
-      if (!modal) return
-      const focusable = modal.querySelectorAll('a, button, input, [tabindex]:not([tabindex="-1"])')
-      if (!focusable.length) return
-      const first = focusable[0]
-      const last = focusable[focusable.length - 1]
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault(); last.focus()
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault(); first.focus()
-      }
-    }
-
-    document.addEventListener('keydown', trap)
-    return () => { document.removeEventListener('keydown', trap); document.body.style.overflow = '' }
-  }, [selectedEvent])
-
   function go(delta) {
     const next = new Date(current.getFullYear(), current.getMonth() + delta, 1)
     if (next < MIN) return
@@ -258,118 +229,25 @@ export default function Calendar() {
               <div key={key} className={`calendar-day ${dayEvents.length ? 'has-event' : ''} ${key === todayKey ? 'today' : ''} ${dow === 0 || dow === 6 ? 'weekend' : ''}`}>
                 <div className="calendar-date">{c}</div>
 
-                {dayEvents.map((ev, i) => {
-                  // compute optional inline style for event tile based on ev.colour / ev.color
-                  const tileStyle = {}
-                  let tileTextColor = null
-
-                  // normalize incoming colour and guard against non-string values
-                  const rawColour = String(ev.colour || ev.color || '').trim()
-
-                  if (rawColour) {
-                    const hexMatch = rawColour.match(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
-                    if (hexMatch) {
-                      let hex = hexMatch[1]
-                      if (hex.length === 3) hex = hex.split('').map(c => c + c).join('')
-                      const r = parseInt(hex.slice(0,2), 16)
-                      const g = parseInt(hex.slice(2,4), 16)
-                      const b = parseInt(hex.slice(4,6), 16)
-                      // blend toward white to make the tint pale
-                      const blendFactor = 0.9
-                      const br = Math.round(r + (255 - r) * blendFactor)
-                      const bg = Math.round(g + (255 - g) * blendFactor)
-                      const bb = Math.round(b + (255 - b) * blendFactor)
-                      const blendedHex = '#' + [br, bg, bb].map(v => v.toString(16).padStart(2, '0')).join('')
-                      tileStyle.background = blendedHex
-                      const luminance = (0.2126 * br + 0.7152 * bg + 0.0722 * bb) / 255
-                      tileTextColor = luminance < 0.6 ? '#ffffff' : 'var(--muted)'
-                      tileStyle.border = '1px solid rgba(0,0,0,0.04)'
-                    } else {
-                      // for non-hex values apply a pale white overlay
-                      tileStyle.background = `linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)), ${rawColour}`
-                      tileTextColor = 'var(--muted)'
-                      tileStyle.border = '1px solid rgba(0,0,0,0.04)'
-                    }
-                  } else {
-                    // Fallback to location-based colour if no explicit colour is set
-                    const locationKey = ev.location || ''
-                    const fallbackColor = locationColorMap[locationKey.toUpperCase()] || null
-                    if (fallbackColor) {
-                      // blend the fallback hex toward white (same approach as explicit hex colours)
-                      let hex = fallbackColor.replace('#', '')
-                      if (hex.length === 3) hex = hex.split('').map(c => c + c).join('')
-                      const r = parseInt(hex.slice(0,2), 16)
-                      const g = parseInt(hex.slice(2,4), 16)
-                      const b = parseInt(hex.slice(4,6), 16)
-                      const blendFactor = 0.9
-                      const br = Math.round(r + (255 - r) * blendFactor)
-                      const bg = Math.round(g + (255 - g) * blendFactor)
-                      const bb = Math.round(b + (255 - b) * blendFactor)
-                      const blendedHex = '#' + [br, bg, bb].map(v => v.toString(16).padStart(2, '0')).join('')
-                      tileStyle.background = blendedHex
-                      const luminance = (0.2126 * br + 0.7152 * bg + 0.0722 * bb) / 255
-                      tileTextColor = luminance < 0.6 ? '#ffffff' : 'var(--muted)'
-                      tileStyle.border = '1px solid rgba(0,0,0,0.04)'
-                    }
-                  }
-
-                  return (
-                    <div
-                      key={i}
-                      role="button"
-                      tabIndex={0}
-                      className="calendar-event clickable"
-                      onClick={() => setSelectedEvent({ ...ev })}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedEvent({ ...ev }) }}
-                      style={Object.keys(tileStyle).length ? tileStyle : undefined}
-                    >
-                      <div className="ev-name" style={tileTextColor ? { color: tileTextColor } : undefined}>{ev.name}</div>
-                    </div>
-                  )
-                })}
+                {dayEvents.map((ev, i) => (
+                  <EventTile
+                    key={i}
+                    ev={ev}
+                    dateLabel={''}
+                    onClick={(e) => setSelectedEvent({ ...e })}
+                    // inline style to make the tile compact inside the calendar cell
+                    style={{ minWidth: 0, maxWidth: '100%', padding: 6, boxShadow: 'none', borderRadius: 6 }}
+                  />
+                ))}
 
               </div>
             )
           })}
         </div>
 
-        {/* Event detail modal */}
+        {/* Use shared modal component for event details */}
         {selectedEvent && (
-          <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" onClick={() => setSelectedEvent(null)}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h3 id="modal-title" style={{margin:0}}>{selectedEvent.name}</h3>
-                <button ref={modalCloseRef} className="modal-close" aria-label="Close" onClick={() => setSelectedEvent(null)}>×</button>
-              </div>
-              <div className="modal-body">
-                <p><strong>Date:</strong> {formatDateWithOrdinal(selectedEvent.date)}</p>
-                <p><strong>Location:</strong> {selectedEvent.location}</p>
-                <p><strong>{selectedEvent.tide ? selectedEvent.tide : 'HWT'}:</strong> {selectedEvent.hwt}</p>
-              </div>
-              <div className="modal-actions">
-                {(() => {
-                  const key = selectedEvent.location || selectedEvent.name || ''
-                  const url = siMap[key] || siMap[(key || '').toUpperCase()] || null
-                  if (url) {
-                    return (
-                      <>
-                        <a href={url} target="_blank" rel="noreferrer" className="btn-link" style={{marginRight:8}}>View SI</a>
-                        <a href={url} download className="btn-link">Download SI</a>
-                      </>
-                    )
-                  }
-                  return (
-                    <>
-                      <button className="btn-link disabled" disabled style={{marginRight:8}}>View SI</button>
-                      <button className="btn-link disabled" disabled>Download SI</button>
-                    </>
-                  )
-                })()}
-
-                <button className="btn-link" onClick={() => setSelectedEvent(null)} style={{marginLeft:12}}>Close</button>
-              </div>
-            </div>
-          </div>
+          <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
         )}
       </div>
     </div>
