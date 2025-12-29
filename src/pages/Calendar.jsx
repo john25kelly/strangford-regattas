@@ -322,7 +322,7 @@ export default function Calendar() {
           })}
         </div>
 
-        {loading && <p className="muted">Loading events from sheet…</p>}
+        {loading && <p className="muted">Loading events …</p>}
         {error && <p className="muted">Error loading sheet: {error}</p>}
 
         {/* Event detail modal (same layout as existing calendar) */}

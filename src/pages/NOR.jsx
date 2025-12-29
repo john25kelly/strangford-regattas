@@ -154,7 +154,7 @@ export default function NOR() {
     <div className="page nor">
       <h1>NOR and Sailing Instructions</h1>
 
-      {loading && <p className="muted">Loading events from sheet…</p>}
+      {loading && <p className="muted">Loading events …</p>}
       {error && <p className="muted">Error loading sheet: {error}</p>}
 
       <section className="nor-grid">
