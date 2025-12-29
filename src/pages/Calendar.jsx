@@ -1,7 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react'
-import eventsData from '../data/events.json'
-import EventTile from '../components/EventTile'
-import EventModal from '../components/EventModal'
+import React, { useEffect, useMemo, useState, useRef } from 'react'
+import Papa from 'papaparse'
 
 // Helper: format month title
 function monthTitle(d) {
@@ -34,12 +32,80 @@ function formatDateWithOrdinal(iso) {
   return `${ordinal(day)} ${month} ${year}`
 }
 
+// Best-effort date parser to produce YYYY-MM-DD
+function parseDateToIso(str) {
+  if (!str) return null
+  let s = String(str).trim()
+  s = s.replace(/(\d{1,2})(st|nd|rd|th)\b/gi, '$1')
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+  if (/^\d+(?:\.\d+)?$/.test(s)) {
+    const n = Math.floor(Number(s))
+    const epoch = new Date(Date.UTC(1899, 11, 30))
+    const dt = new Date(epoch.getTime() + n * 24 * 60 * 60 * 1000)
+    const y = dt.getFullYear()
+    const m = String(dt.getMonth() + 1).padStart(2, '0')
+    const d = String(dt.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+  const dtAuto = new Date(s)
+  if (!isNaN(dtAuto.getTime())) {
+    const y = dtAuto.getFullYear()
+    const m = String(dtAuto.getMonth() + 1).padStart(2, '0')
+    const d = String(dtAuto.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+  const m1 = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/)
+  if (m1) {
+    const a = parseInt(m1[1], 10)
+    const b = parseInt(m1[2], 10)
+    const yr = parseInt(m1[3], 10)
+    function buildIso(year, month1based, day) {
+      if (month1based < 1 || month1based > 12) return null
+      if (day < 1 || day > 31) return null
+      const dt = new Date(year, month1based - 1, day)
+      if (dt.getFullYear() !== year || dt.getMonth() + 1 !== month1based || dt.getDate() !== day) return null
+      const mm = String(dt.getMonth() + 1).padStart(2, '0')
+      const dd = String(dt.getDate()).padStart(2, '0')
+      return `${year}-${mm}-${dd}`
+    }
+    if (a > 12 && b <= 12) return buildIso(yr, b, a)
+    if (b > 12 && a <= 12) return buildIso(yr, a, b)
+    let tryIso = buildIso(yr, a, b)
+    if (tryIso) return tryIso
+    tryIso = buildIso(yr, b, a)
+    if (tryIso) return tryIso
+  }
+  return null
+}
+
 export default function Calendar() {
+  // Use the provided share URL (user-supplied) and normalize it to a CSV export URL
+  const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1aJbtVHiTU1XrvAq1aW7ZJ2kxeRPzdDFi29Xq55htjg4/edit?usp=sharing'
+
+  function normalizeToCsvUrl(url) {
+    if (!url) return url
+    try {
+      if (/\/export\?/i.test(url)) return url
+      const m = url.match(/\/d\/([a-zA-Z0-9_-]+)/)
+      const id = m ? m[1] : null
+      const gidMatch = url.match(/[?&]gid=(\d+)/)
+      const gid = gidMatch ? gidMatch[1] : '0'
+      if (id) return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&gid=${gid}`
+      return url
+    } catch (err) {
+      return url
+    }
+  }
+
+  const csvUrl = normalizeToCsvUrl(SHEET_URL)
   const MIN = new Date(2026, 0, 1)
   const MAX = new Date(2026, 11, 1)
 
-  // Restore saved month (format: YYYY-MM) from localStorage when available
-  function loadSavedCurrent() {
+  const [rows, setRows] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  const [current, setCurrent] = useState(() => {
     try {
       const s = localStorage.getItem('calendar:current')
       if (s && /^\d{4}-\d{2}$/.test(s)) {
@@ -53,98 +119,88 @@ export default function Calendar() {
           return d
         }
       }
-    } catch (err) {
-      // ignore localStorage errors
-    }
+    } catch (err) {}
     return new Date(2026, 3, 1)
-  }
+  })
 
-  const [current, setCurrent] = useState(() => loadSavedCurrent())
-  const [events] = useState(eventsData)
   const [selectedEvent, setSelectedEvent] = useState(null)
+  const modalCloseRef = useRef(null)
+  const previouslyFocused = useRef(null)
 
-  // Persist the current month when it changes
   useEffect(() => {
     try {
       const y = current.getFullYear()
       const m = String(current.getMonth() + 1).padStart(2, '0')
       localStorage.setItem('calendar:current', `${y}-${m}`)
-    } catch (err) {
-      // ignore
-    }
+    } catch (err) {}
   }, [current])
+
+  useEffect(() => {
+    let cancelled = false
+    async function fetchCsv() {
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch(csvUrl)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const text = await res.text()
+
+        let parsed = Papa.parse(text, { header: true, skipEmptyLines: true })
+        let data = parsed.data || []
+
+        const firstHeader = (parsed.meta && parsed.meta.fields && parsed.meta.fields[0]) || ''
+        const looksLikeDateHeader = /^(\d{1,2}(st|nd|rd|th)?\s+\w+\s+\d{4}|\d{4}-\d{2}-\d{2})/i.test(firstHeader)
+        if (data.length === 0 || looksLikeDateHeader) {
+          const parsedNoHeader = Papa.parse(text, { header: false, skipEmptyLines: true })
+          const rowsArr = parsedNoHeader.data || []
+          data = rowsArr.map(r => ({
+            date: (r[0] || '').toString(),
+            name: (r[1] || '').toString(),
+            location: (r[2] || '').toString(),
+            hwt: (r[3] || '').toString(),
+            tide: (r[4] || '').toString(),
+            pdfUrl: (r[5] || '').toString()
+          }))
+        }
+
+        const events = []
+        for (const r of data) {
+          const norm = {}
+          for (const k of Object.keys(r)) {
+            norm[k.trim().toLowerCase()] = (r[k] || '').toString().trim()
+          }
+
+          const dateRaw = norm['date'] || norm['day'] || norm['event date'] || norm['start date'] || ''
+          const name = norm['name'] || norm['event'] || norm['title'] || ''
+          const location = norm['location'] || norm['club'] || ''
+          const hwt = norm['hwt'] || norm['time'] || ''
+          const tide = norm['tide'] || ''
+          const pdfUrl = norm['pdfurl'] || norm['pdf url'] || norm['si'] || norm['url'] || ''
+
+          const iso = parseDateToIso(dateRaw)
+          if (!iso || !name) continue
+
+          events.push({ date: iso, name, location, hwt, tide: tide || undefined, pdfUrl: pdfUrl || undefined })
+        }
+
+        if (!cancelled) setRows(events)
+      } catch (err) {
+        if (!cancelled) setError(String(err))
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchCsv()
+    return () => { cancelled = true }
+  }, [csvUrl])
 
   const eventsByDate = useMemo(() => {
     const map = {}
-
-    // helper: try to normalize event.date into an ISO yyyy-mm-dd key
-    function normalizeDateKey(d) {
-      if (!d) return null
-      // already ISO-like
-      if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d
-      // try to parse formats like "9th May 2026" or "9 May 2026"
-      const m = String(d).trim().match(/^([0-9]{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]+)\s+(\d{4})$/)
-      if (m) {
-        const day = Number(m[1])
-        const monthName = m[2].toLowerCase()
-        const year = Number(m[3])
-        const monthNames = ['january','february','march','april','may','june','july','august','september','october','november','december']
-        const mi = monthNames.indexOf(monthName)
-        if (mi >= 0) {
-          const mm = String(mi + 1).padStart(2, '0')
-          const dd = String(day).padStart(2, '0')
-          return `${year}-${mm}-${dd}`
-        }
-      }
-      // last resort: try Date.parse
-      const parsed = Date.parse(d)
-      if (!isNaN(parsed)) {
-        const dt = new Date(parsed)
-        const y = dt.getFullYear()
-        const mm = String(dt.getMonth() + 1).padStart(2, '0')
-        const dd = String(dt.getDate()).padStart(2, '0')
-        return `${y}-${mm}-${dd}`
-      }
-      return null
-    }
-
-    for (const e of events) {
-      const key = normalizeDateKey(e.date) || e.date
-      ;(map[key] = map[key] || []).push(e)
+    for (const e of rows) {
+      ;(map[e.date] = map[e.date] || []).push(e)
     }
     return map
-  }, [events])
-
-  const siMap = {
-    NSC: 'https://www.strangfordloughregattas.co.uk/documents/NSC2025.pdf',
-    QYC: 'https://www.strangfordloughregattas.co.uk/documents/QYC2025.pdf',
-    KSC: 'https://www.strangfordloughregattas.co.uk/documents/KSC2025.pdf',
-    'Bar Buoy': 'https://www.strangfordloughregattas.co.uk/documents/BarBuoy2025.pdf',
-    SSC: 'https://www.strangfordloughregattas.co.uk/documents/SSC2025.pdf',
-    PSC: 'https://www.strangfordloughregattas.co.uk/documents/PSC2025.pdf',
-    PTR: 'https://www.strangfordloughregattas.co.uk/documents/PTR2025.pdf',
-    KYC: 'https://www.strangfordloughregattas.co.uk/documents/KYC2025.pdf',
-    EDYC: 'https://www.strangfordloughregattas.co.uk/documents/EDYC2025v2.pdf',
-    SLYC: 'https://www.strangfordloughregattas.co.uk/documents/slycv52025.pdf'
-  }
-
-  // Optional fallback colour map by location (used when event has no explicit `colour` field)
-  const locationColorMap = {
-    QYC: '#0b3d91',
-    EDYC: '#1e6fb8',
-    KYC: '#0b6b4a',
-    KSC: '#b84e1e',
-    NSC: '#6b3d9a',
-    SSC: '#0b5a91',
-    PSC: '#b88f1e',
-    SLYC: '#1e6fb8'
-  }
-
-  const months = useMemo(() => {
-    const arr = []
-    for (let m = 0; m <= 11; m++) arr.push(new Date(2026, m, 1))
-    return arr
-  }, [])
+  }, [rows])
 
   const todayKey = useMemo(() => {
     const t = new Date()
@@ -155,12 +211,33 @@ export default function Calendar() {
   }, [])
 
   useEffect(() => {
-    function onKey(e) {
-      if (e.key === 'Escape') setSelectedEvent(null)
+    if (!selectedEvent) {
+      try { if (previouslyFocused.current && previouslyFocused.current.focus) previouslyFocused.current.focus() } catch (err) {}
+      document.body.style.overflow = ''
+      return
     }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
+    previouslyFocused.current = document.activeElement
+    document.body.style.overflow = 'hidden'
+    setTimeout(() => { if (modalCloseRef.current && modalCloseRef.current.focus) modalCloseRef.current.focus() }, 0)
+
+    function trap(e) {
+      if (e.key !== 'Tab') return
+      const modal = document.querySelector('.modal')
+      if (!modal) return
+      const focusable = modal.querySelectorAll('a, button, input, [tabindex]:not([tabindex="-1"])')
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus()
+      }
+    }
+
+    document.addEventListener('keydown', trap)
+    return () => { document.removeEventListener('keydown', trap); document.body.style.overflow = '' }
+  }, [selectedEvent])
 
   function go(delta) {
     const next = new Date(current.getFullYear(), current.getMonth() + delta, 1)
@@ -181,6 +258,17 @@ export default function Calendar() {
   for (let i = 0; i < leadingBlanks; i++) cells.push(null)
   for (let d = 1; d <= daysInMonth; d++) cells.push(d)
 
+  // Compute whether the selected event actually contains a PDF URL (spreadsheet cell provided)
+  const selectedEventPdfUrl = (() => {
+    if (!selectedEvent || !selectedEvent.pdfUrl) return null
+    try {
+      const trimmed = String(selectedEvent.pdfUrl).trim()
+      return trimmed.length ? trimmed : null
+    } catch (err) {
+      return null
+    }
+  })()
+
   return (
     <div className="page calendar-page">
       <h1>Calendar</h1>
@@ -188,20 +276,9 @@ export default function Calendar() {
       <div style={{display:'flex',gap:12,alignItems:'center',marginBottom:12,flexWrap:'wrap'}}>
         <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
           <strong className="muted">Jump to month:</strong>
-          {months.map((m,i) => {
-            const isActive = m.getFullYear() === current.getFullYear() && m.getMonth() === current.getMonth()
-            return (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setCurrent(new Date(m))}
-                className={`btn-link ${isActive ? 'active' : ''}`}
-                aria-pressed={isActive}
-              >
-                {monthTitle(m)}
-              </button>
-            )
-          })}
+          {Array.from({ length: 12 }).map((_, m) => (
+            <button key={m} type="button" onClick={() => setCurrent(new Date(2026, m, 1))} className="btn-link">{monthTitle(new Date(2026, m, 1))}</button>
+          ))}
         </div>
       </div>
 
@@ -215,7 +292,7 @@ export default function Calendar() {
         </div>
 
         <div className="calendar-grid">
-          {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((wd, idx) => (
+          {[ 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun' ].map((wd, idx) => (
             <div key={wd} className={`calendar-weekday ${idx === 5 || idx === 6 ? 'weekend' : ''}`}>{wd}</div>
           ))}
 
@@ -228,26 +305,76 @@ export default function Calendar() {
             return (
               <div key={key} className={`calendar-day ${dayEvents.length ? 'has-event' : ''} ${key === todayKey ? 'today' : ''} ${dow === 0 || dow === 6 ? 'weekend' : ''}`}>
                 <div className="calendar-date">{c}</div>
-
                 {dayEvents.map((ev, i) => (
-                  <EventTile
+                  <div
                     key={i}
-                    ev={ev}
-                    dateLabel={''}
-                    onClick={(e) => setSelectedEvent({ ...e })}
-                    // inline style to make the tile compact inside the calendar cell
-                    style={{ minWidth: 0, maxWidth: '100%', padding: 6, boxShadow: 'none', borderRadius: 6 }}
-                  />
+                    role="button"
+                    tabIndex={0}
+                    className="calendar-event clickable"
+                    onClick={() => setSelectedEvent({ ...ev })}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedEvent({ ...ev }) }}
+                  >
+                    <div className="ev-name">{ev.name}</div>
+                  </div>
                 ))}
-
               </div>
             )
           })}
         </div>
 
-        {/* Use shared modal component for event details */}
+        {loading && <p className="muted">Loading events from sheet…</p>}
+        {error && <p className="muted">Error loading sheet: {error}</p>}
+
+        {/* Event detail modal (same layout as existing calendar) */}
         {selectedEvent && (
-          <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+          <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" onClick={() => setSelectedEvent(null)}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3 id="modal-title" style={{margin:0}}>{selectedEvent.name}</h3>
+                <button ref={modalCloseRef} className="modal-close" aria-label="Close" onClick={() => setSelectedEvent(null)}>×</button>
+              </div>
+              <div className="modal-body">
+                <p><strong>Date:</strong> {formatDateWithOrdinal(selectedEvent.date)}</p>
+                <p><strong>Location:</strong> {selectedEvent.location}</p>
+                <p><strong>{selectedEvent.tide ? selectedEvent.tide : 'HWT'}:</strong> {selectedEvent.hwt}</p>
+                {!selectedEventPdfUrl && (
+                  <p className="muted" style={{marginTop:8}}><strong>Note:</strong> The SIs are not yet available for the {selectedEvent.name}.</p>
+                )}
+              </div>
+              <div className="modal-actions">
+                {(() => {
+                  // IMPORTANT: enable View/Download only when the spreadsheet row itself contains a pdfUrl.
+                  let selectedEventPdfUrl = null
+                  if (selectedEvent && selectedEvent.pdfUrl) {
+                    try {
+                      const trimmed = String(selectedEvent.pdfUrl).trim()
+                      selectedEventPdfUrl = trimmed.length ? trimmed : null
+                    } catch (err) {
+                      selectedEventPdfUrl = null
+                    }
+                  }
+
+                  if (selectedEventPdfUrl) {
+                    return (
+                      <>
+                        <a href={selectedEventPdfUrl} target="_blank" rel="noreferrer" className="btn-link" style={{marginRight:8}}>View SI</a>
+                        <a href={selectedEventPdfUrl} download className="btn-link">Download SI</a>
+                      </>
+                    )
+                  }
+
+                  return (
+                    <>
+                      <button className="btn-link disabled" disabled style={{marginRight:8}}>View SI</button>
+                      <button className="btn-link disabled" disabled>Download SI</button>
+                    </>
+                  )
+                })()}
+
+                <button className="btn-link" onClick={() => setSelectedEvent(null)} style={{marginLeft:12}}>Close</button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

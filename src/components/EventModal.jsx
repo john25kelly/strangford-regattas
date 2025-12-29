@@ -66,21 +66,46 @@ export default function EventModal({ event, onClose }) {
     return `${ordinal(day)} ${month} ${year}`
   }
 
-  const siMap = {
-    NSC: 'https://www.strangfordloughregattas.co.uk/documents/NSC2025.pdf',
-    QYC: 'https://www.strangfordloughregattas.co.uk/documents/QYC2025.pdf',
-    KSC: 'https://www.strangfordloughregattas.co.uk/documents/KSC2025.pdf',
-    'Bar Buoy': 'https://www.strangfordloughregattas.co.uk/documents/BarBuoy2025.pdf',
-    SSC: 'https://www.strangfordloughregattas.co.uk/documents/SSC2025.pdf',
-    PSC: 'https://www.strangfordloughregattas.co.uk/documents/PSC2025.pdf',
-    PTR: 'https://www.strangfordloughregattas.co.uk/documents/PTR2025.pdf',
-    KYC: 'https://www.strangfordloughregattas.co.uk/documents/KYC2025.pdf',
-    EDYC: 'https://www.strangfordloughregattas.co.uk/documents/EDYC2025v2.pdf',
-    SLYC: 'https://www.strangfordloughregattas.co.uk/documents/slycv52025.pdf'
+  // Prefer explicit pdfUrl from the spreadsheet. If it's missing or empty, treat SIs as not available.
+  const pdf = event.pdfUrl && String(event.pdfUrl).trim() ? String(event.pdfUrl).trim() : null
+  // Validate URL: accept absolute (http/https) or relative URLs. If invalid, treat as unavailable.
+  let url = null
+  if (pdf) {
+    try {
+      // new URL(pdf, base) will parse relative URLs too
+      const parsed = new URL(pdf, typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
+      // only allow http(s) protocols
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') url = parsed.href
+    } catch (err) {
+      url = null
+    }
   }
 
-  const key = event.location || event.name || ''
-  const url = siMap[key] || siMap[(key || '').toUpperCase()] || event.pdfUrl || null
+  // Debugging helper: log the computed pdf/url when modal opens so we can diagnose unexpected enabled links.
+  useEffect(() => {
+    try {
+      // eslint-disable-next-line no-console
+      console.debug('EventModal open:', { name: event.name, pdf: event.pdfUrl, computedUrl: url })
+    } catch (err) {}
+  }, [event, url])
+
+  function openUrl(u) {
+    if (!u) return
+    try { window.open(u, '_blank', 'noopener') } catch (err) { /* ignore */ }
+  }
+
+  function downloadUrl(u) {
+    if (!u) return
+    try {
+      const a = document.createElement('a')
+      a.href = u
+      a.download = ''
+      a.rel = 'noopener'
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    } catch (err) { /* ignore */ }
+  }
 
   return (
     <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" onClick={() => onClose()}>
@@ -93,19 +118,30 @@ export default function EventModal({ event, onClose }) {
           <p><strong>Date:</strong> {formatDateWithOrdinal(event.date)}</p>
           <p><strong>Location:</strong> {event.location}</p>
           <p><strong>{event.tide ? event.tide : 'HWT'}:</strong> {event.hwt}</p>
+          {!url && (
+            <p className="muted"><strong>Note:</strong> The SIs are not yet available for the {event.name}.</p>
+          )}
         </div>
         <div className="modal-actions">
-          {url ? (
-            <>
-              <a href={url} target="_blank" rel="noreferrer" className="btn-link" style={{marginRight:8}}>View SI</a>
-              <a href={url} download className="btn-link">Download SI</a>
-            </>
-          ) : (
-            <>
-              <button className="btn-link disabled" disabled style={{marginRight:8}}>View SI</button>
-              <button className="btn-link disabled" disabled>Download SI</button>
-            </>
-          )}
+          <>
+            <button
+              type="button"
+              className={`btn-link ${!url ? 'disabled' : ''}`}
+              onClick={() => openUrl(url)}
+              disabled={!url}
+              style={{marginRight:8}}
+            >
+              View SI
+            </button>
+            <button
+              type="button"
+              className={`btn-link ${!url ? 'disabled' : ''}`}
+              onClick={() => downloadUrl(url)}
+              disabled={!url}
+            >
+              Download SI
+            </button>
+          </>
 
           <button className="btn-link" onClick={() => onClose()} style={{marginLeft:12}}>Close</button>
         </div>
@@ -113,4 +149,3 @@ export default function EventModal({ event, onClose }) {
     </div>
   )
 }
-
