@@ -200,8 +200,6 @@ export default function Home() {
           {loading && <p className="muted">Loading events…</p>}
           {error && <p className="muted">Error loading events: {error}</p>}
 
-          <div style={{marginTop:12, fontWeight:700}}>Countdown to next event: <span style={{color:'var(--accent)'}}>{countdown}</span></div>
-
           {!loading && !error && (
             <div style={{display:'flex',gap:12,flexWrap:'wrap',marginTop:12}}>
               {upcoming.length === 0 && <div className="muted">No upcoming events found</div>}
@@ -216,6 +214,8 @@ export default function Home() {
               ))}
             </div>
           )}
+
+          <div style={{marginTop:12, fontWeight:700}}>Countdown to the next event: <span style={{color:'var(--accent)'}}>{countdown}</span></div>
         </div>
 
         {/* WhatsApp QR code (put the image at public/whatsapp-qr.jpg) */}
