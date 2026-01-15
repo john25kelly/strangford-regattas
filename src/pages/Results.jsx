@@ -1,7 +1,7 @@
 import React from 'react'
 
 export default function Results() {
-  const resultsUrl = 'https://halsail-1e484.kxcdn.com/Result/Public/89859'
+  const resultsUrl = 'https://halsail.com/Result/Club/3815'
 
   return (
     <div className="page results">
@@ -19,4 +19,3 @@ export default function Results() {
     </div>
   )
 }
-

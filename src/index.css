@@ -361,3 +361,13 @@ nav a:hover{color:#fff;background:var(--accent-2)}
     height:40px;
   }
 }
+
+/* Make event tiles fill available width on small screens when marked with .full-width-mobile */
+@media (max-width:720px) {
+  .full-width-mobile {
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
