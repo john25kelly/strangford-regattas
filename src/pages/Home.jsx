@@ -234,8 +234,26 @@ export default function Home() {
             />
           </a>
           <p className="muted" style={{textAlign:'center',maxWidth:600}}>
-            This QR code joins the Strangford Lough Regatta WhatsApp group — scan it with your phone to join the group.
+            Scan or click the QR code to join the WhatsApp group
           </p>
+        </div>
+
+        {/* Social media tile: WhatsApp QR, Instagram and Facebook links */}
+        <div className="nor-tile" style={{marginTop:16,display:'flex',flexDirection:'column',alignItems:'center',gap:12}}>
+          <h3>Follow us on social media</h3>
+          <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8}}>
+            {/* Removed the QR from this tile per request; WhatsApp QR remains above. */}
+
+            <div style={{display:'flex',gap:20,alignItems:'center'}}>
+              <a href="https://www.instagram.com/strangfordloughregattas?igsh=dmg3YnN5bWJuYnZv&utm_source=qr" target="_blank" rel="noopener noreferrer" title="Instagram">
+                <img src={import.meta.env.BASE_URL + 'instagram.svg'} alt="Instagram" style={{width:56,height:56}} />
+              </a>
+
+              <a href="https://www.facebook.com/groups/873119219900371" target="_blank" rel="noopener noreferrer" title="Facebook">
+                <img src={import.meta.env.BASE_URL + 'facebook.svg'} alt="Facebook" style={{width:56,height:56}} />
+              </a>
+            </div>
+          </div>
         </div>
 
         {/* Use shared EventModal component for details */}
