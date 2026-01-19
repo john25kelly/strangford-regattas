@@ -249,7 +249,7 @@ export default function Home() {
                 <img src={import.meta.env.BASE_URL + 'instagram.svg'} alt="Instagram" style={{width:56,height:56}} />
               </a>
 
-              <a href="https://www.facebook.com/groups/873119219900371" target="_blank" rel="noopener noreferrer" title="Facebook">
+              <a href="https://www.facebook.com/profile.php?id=100066336231586" target="_blank" rel="noopener noreferrer" title="Facebook">
                 <img src={import.meta.env.BASE_URL + 'facebook.svg'} alt="Facebook" style={{width:56,height:56}} />
               </a>
             </div>
