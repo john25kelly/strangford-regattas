@@ -164,7 +164,7 @@ export default function NOR() {
           title="General Sailing Instructions"
           pdfUrl={undefined}
           note="Note: the general SI are not yet available."
-          image="/new-logo.jpg"
+          image="new-logo.jpg"
         />
         {events.map((e, idx) => (
           <NORTile

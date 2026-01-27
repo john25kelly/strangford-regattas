@@ -48,7 +48,15 @@ export default function NORTile({ title, date, location, hwt, pdfUrl, colour, no
   // If the caller provided an explicit image, use it as a pale background layer
   if (image) {
     try {
-      const imgUrl = new URL(image, import.meta.url).href
+      // Build a runtime-friendly URL that respects Vite's base (import.meta.env.BASE_URL).
+      // Strip any leading slash from the provided image path so we don't produce an absolute root path
+      const imagePath = String(image).replace(/^\//, '')
+      // Use './' as a safer fallback (avoids absolute root '/') so deployed pages under a repo path work correctly.
+      const base = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL) ? import.meta.env.BASE_URL : './'
+      // Ensure base ends with a slash unless it's './'
+      const normalizedBase = base === './' || base.endsWith('/') ? base : base + '/'
+      const imgUrl = normalizedBase + imagePath
+
       // If a background color was set above, keep it as backgroundColor and layer the image + pale overlay on top
       if (tileStyle.background && typeof tileStyle.background === 'string' && tileStyle.background.startsWith('#')) {
         tileStyle.backgroundColor = tileStyle.background
