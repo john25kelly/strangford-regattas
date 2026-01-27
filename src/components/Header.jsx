@@ -9,7 +9,10 @@ export default function Header() {
   const previouslyFocused = useRef(null)
 
   // Resolve public asset in a Vite-friendly way so base paths are respected
-  const logo = new URL('/SLRC_Logo.jpg', import.meta.url).href
+  // Use the ICO placed in public/ as the header brand icon. Browsers generally
+  // support rendering .ico in <img>, and this keeps the header consistent with
+  // the page/address bar favicon.
+  const logo = new URL('/new-logo.ico', import.meta.url).href
 
   // determine whether we should use the "mobile" (hamburger) UI
   const [isMobile, setIsMobile] = useState(() => {

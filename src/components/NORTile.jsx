@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function NORTile({ title, date, location, hwt, pdfUrl, colour }) {
+export default function NORTile({ title, date, location, hwt, pdfUrl, colour, note, image }) {
   const siAvailable = !!pdfUrl
 
   // prepare inline style if a colour is provided
@@ -42,6 +42,25 @@ export default function NORTile({ title, date, location, hwt, pdfUrl, colour }) 
       // Use muted text color as safe default since we can't compute luminance reliably
       tileTextColor = 'var(--muted)'
       tileStyle.border = '1px solid rgba(0,0,0,0.06)'
+    }
+  }
+
+  // If the caller provided an explicit image, use it as a pale background layer
+  if (image) {
+    try {
+      const imgUrl = new URL(image, import.meta.url).href
+      // If a background color was set above, keep it as backgroundColor and layer the image + pale overlay on top
+      if (tileStyle.background && typeof tileStyle.background === 'string' && tileStyle.background.startsWith('#')) {
+        tileStyle.backgroundColor = tileStyle.background
+      }
+      // Apply a gentle white overlay over the image so the image is pale and text remains readable
+      tileStyle.backgroundImage = `linear-gradient(rgba(255,255,255,0.75), rgba(255,255,255,0.75)), url(${imgUrl})`
+      tileStyle.backgroundRepeat = 'no-repeat'
+      tileStyle.backgroundPosition = 'center'
+      tileStyle.backgroundSize = 'contain'
+      tileStyle.backgroundBlendMode = 'normal'
+    } catch (err) {
+      // ignore resolution errors in non-browser environments
     }
   }
 
@@ -100,11 +119,16 @@ export default function NORTile({ title, date, location, hwt, pdfUrl, colour }) 
       {location && <p className="muted" style={tileTextColor ? { color: tileTextColor } : undefined}>{location}</p>}
       {hwt && <p style={tileTextColor ? { color: tileTextColor } : undefined}><strong>HWT:</strong> {hwt}</p>}
 
-      {(!hwt || !siAvailable) && (
+      {/* If a custom note is supplied, show it. Otherwise fall back to the existing availability note when no HWT or SI is available. */}
+      {note ? (
+        <p className="muted" style={Object.assign({ marginTop: 8 }, tileTextColor ? { color: tileTextColor } : undefined)}>
+          {note}
+        </p>
+      ) : ((!hwt || !siAvailable) && (
         <p className="muted" style={Object.assign({ marginTop: 8 }, tileTextColor ? { color: tileTextColor } : undefined)}>
           <strong>Note:</strong> The SI is not yet available for this event
         </p>
-      )}
+      ))}
 
       <div className="tile-actions">
         <button

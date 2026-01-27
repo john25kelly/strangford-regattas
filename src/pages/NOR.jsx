@@ -158,6 +158,14 @@ export default function NOR() {
       {error && <p className="muted">Error loading sheet: {error}</p>}
 
       <section className="nor-grid">
+        {/* Hardcoded tile for General Sailing Instructions (not in the spreadsheet) */}
+        <NORTile
+          key="general-si"
+          title="General Sailing Instructions"
+          pdfUrl={undefined}
+          note="Note: the general SI are not yet available."
+          image="/new-logo.jpg"
+        />
         {events.map((e, idx) => (
           <NORTile
             key={`${e.date}-${idx}`}
