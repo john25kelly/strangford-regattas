@@ -3,12 +3,26 @@ import React from 'react'
 export default function NORTile({ title, date, location, hwt, pdfUrl, colour, note, image }) {
   const siAvailable = !!pdfUrl
 
+  // If the colour column explicitly contains 'regatta', prefer the project logo image
+  // and avoid treating the value as a colour string.
+  let colourVal = colour
+  let imageToUse = image
+  try {
+    if (colourVal && String(colourVal).trim().toLowerCase() === 'regatta') {
+      // default to new-logo.jpg if no explicit image provided
+      imageToUse = imageToUse || 'new-logo.jpg'
+      colourVal = undefined
+    }
+  } catch (err) {
+    // ignore
+  }
+
   // prepare inline style if a colour is provided
   const tileStyle = {}
   let tileTextColor = null
-  if (colour) {
+  if (colourVal) {
     // If it's a hex colour, blend it with white to tone it down (less saturated/strong)
-    const hexMatch = String(colour).trim().match(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
+    const hexMatch = String(colourVal).trim().match(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/)
     if (hexMatch) {
       let hex = hexMatch[1]
       if (hex.length === 3) {
@@ -38,19 +52,19 @@ export default function NORTile({ title, date, location, hwt, pdfUrl, colour, no
       // For non-hex values (named colors, rgb(), etc.) apply a white overlay to tone them down
       // Use CSS layered background: a semi-opaque white layer over the provided color.
       // increase overlay alpha to 0.9 to make non-hex colours 50% paler than prior setting
-      tileStyle.background = `linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)), ${colour}`
+      tileStyle.background = `linear-gradient(rgba(255,255,255,0.9), rgba(255,255,255,0.9)), ${colourVal}`
       // Use muted text color as safe default since we can't compute luminance reliably
       tileTextColor = 'var(--muted)'
       tileStyle.border = '1px solid rgba(0,0,0,0.06)'
     }
   }
 
-  // If the caller provided an explicit image, use it as a pale background layer
-  if (image) {
+  // If the caller provided an explicit image (or we set one because colour === 'regatta'), use it as a pale background layer
+  if (imageToUse) {
     try {
       // Build a runtime-friendly URL that respects Vite's base (import.meta.env.BASE_URL).
       // Strip any leading slash from the provided image path so we don't produce an absolute root path
-      const imagePath = String(image).replace(/^\//, '')
+      const imagePath = String(imageToUse).replace(/^\//, '')
       // Use './' as a safer fallback (avoids absolute root '/') so deployed pages under a repo path work correctly.
       const base = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL) ? import.meta.env.BASE_URL : './'
       // Ensure base ends with a slash unless it's './'
