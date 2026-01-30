@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react'
 import Papa from 'papaparse'
+import { fetchWithTimeout } from '../utils/fetchWithTimeout'
+import localEvents from '../data/events.json'
+import { SHEET_URL } from '../config' // const SHEET_URL imported from centralized config
 
 // Helper: format month title
 function monthTitle(d) {
@@ -80,7 +83,6 @@ function parseDateToIso(str) {
 
 export default function Calendar() {
   // Use the provided share URL (user-supplied) and normalize it to a CSV export URL
-  const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1aJbtVHiTU1XrvAq1aW7ZJ2kxeRPzdDFi29Xq55htjg4/edit?usp=sharing'
 
   function normalizeToCsvUrl(url) {
     if (!url) return url
@@ -104,6 +106,7 @@ export default function Calendar() {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [usingFallback, setUsingFallback] = useState(false)
 
   const [current, setCurrent] = useState(() => {
     try {
@@ -141,9 +144,27 @@ export default function Calendar() {
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch(csvUrl)
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const text = await res.text()
+        let text
+        try {
+          text = await fetchWithTimeout(csvUrl, 10000)
+        } catch (fetchErr) {
+          // fallback to local events if remote fetch fails/times out
+          if (!cancelled) {
+            // ensure banner state is set before rendering rows
+            console.debug('Calendar: falling back to local events.json')
+            setUsingFallback(true)
+            setRows(localEvents.map(e => ({
+              date: parseDateToIso(e.date) || '',
+              name: e.name || '',
+              location: e.location || '',
+              hwt: e.hwt || '',
+              tide: e.tide || '',
+              pdfUrl: e.pdfUrl || ''
+            })).filter(ev => ev.date && ev.name))
+          }
+           setLoading(false)
+           return
+         }
 
         let parsed = Papa.parse(text, { header: true, skipEmptyLines: true })
         let data = parsed.data || []
@@ -274,6 +295,14 @@ export default function Calendar() {
     <div className="page calendar-page">
       <h1>Calendar</h1>
 
+      {/* Show unobtrusive fallback banner immediately under the page title so it's always visible */}
+      {usingFallback && (
+        <div className="fallback-banner" role="status" aria-live="polite">
+          Using local cached event data because the remote spreadsheet could not be reached.
+          <small>Data may be out-of-date.</small>
+        </div>
+      )}
+
       <div style={{display:'flex',gap:12,alignItems:'center',marginBottom:12,flexWrap:'wrap'}}>
         <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
           <strong className="muted">Jump to month:</strong>
@@ -298,64 +327,126 @@ export default function Calendar() {
           ))}
 
           {cells.map((c, idx) => {
-            if (c === null) return <div key={`empty-${idx}`} className="calendar-day empty" />
-            const key = dateKeyFromParts(year, month, c)
-            const dayEvents = eventsByDate[key] || []
-            const dow = new Date(year, month, c).getDay()
+            if (c === null) {
+              return <div key={idx} className="calendar-day blank" />
+            }
+            const iso = dateKeyFromParts(year, month, c)
+            const isToday = iso === todayKey
+            const isSelected = selectedEvent && selectedEvent.date === iso
+            const dayEvents = eventsByDate[iso] || []
+            const eventCount = dayEvents.length
 
             return (
-              <div key={key} className={`calendar-day ${dayEvents.length ? 'has-event' : ''} ${key === todayKey ? 'today' : ''} ${dow === 0 || dow === 6 ? 'weekend' : ''}`}>
-                <div className="calendar-date">{c}</div>
-                {dayEvents.map((ev, i) => (
-                  <div
-                    key={i}
-                    role="button"
-                    tabIndex={0}
-                    className="calendar-event clickable"
-                    onClick={() => setSelectedEvent({ ...ev })}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedEvent({ ...ev }) }}
-                  >
-                    <div className="ev-name">{ev.name}</div>
-                  </div>
-                ))}
+              <div key={idx} className="calendar-day" data-today={isToday ? 'true' : undefined}>
+                <div className="calendar-day-inner">
+                  <div className="calendar-date">{c}</div>
+                  {eventCount > 0 && (
+                    <div className="calendar-events" aria-hidden={isSelected}>
+                      {dayEvents.slice(0, 2).map((ev, evIdx) => {
+                        const pdfUrl = ev.pdfUrl ? String(ev.pdfUrl).trim() : null
+                        const hasPdf = pdfUrl && pdfUrl !== '#'
+                        const isFirst = evIdx === 0
+                        const isLast = evIdx === dayEvents.length - 1
+                        return (
+                          <div key={ev.date + ev.name} className={`calendar-event ${isFirst ? 'first' : ''} ${isLast ? 'last' : ''} ${hasPdf ? 'has-pdf' : ''}`} style={{}}>
+                            <div className="calendar-event-name">{ev.name}</div>
+                            <div className="calendar-event-details">
+                              {ev.location && <div className="calendar-event-location">{ev.location}</div>}
+                              {ev.hwt && <div className="calendar-event-time">{ev.hwt}</div>}
+                              {ev.tide && <div className="calendar-event-tide">{ev.tide}</div>}
+                            </div>
+                            {hasPdf && (
+                              <div className="calendar-event-pdf">
+                                <a href={pdfUrl} target="_blank" rel="noreferrer" className="btn-pdf">
+                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h8v5h5v11z"/></svg>
+                                  <span className="btn-pdf-text">PDF</span>
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                      {eventCount > 2 && (
+                        <div className="calendar-event-more">
+                          +{eventCount - 2} more
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {isSelected && (
+                    <div className="calendar-event-selected">
+                      <div className="calendar-event-name">{selectedEvent.name}</div>
+                      <div className="calendar-event-details">
+                        {selectedEvent.location && <div className="calendar-event-location">{selectedEvent.location}</div>}
+                        {selectedEvent.hwt && <div className="calendar-event-time">{selectedEvent.hwt}</div>}
+                        {selectedEvent.tide && <div className="calendar-event-tide">{selectedEvent.tide}</div>}
+                      </div>
+                      {selectedEvent.pdfUrl && (
+                        <div className="calendar-event-pdf">
+                          <a href={selectedEvent.pdfUrl} target="_blank" rel="noreferrer" className="btn-pdf">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h8v5h5v11z"/></svg>
+                            <span className="btn-pdf-text">PDF</span>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             )
           })}
         </div>
+      </div>
 
-        {loading && <p className="muted">Loading events …</p>}
-        {error && <p className="muted">Error loading sheet: {error}</p>}
+      {error && (
+        <div className="banner-error">
+          Error: {error}
+          <button type="button" className="btn-close" onClick={() => setError(null)} aria-label="Close">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path d="M18 6L6 18M6 6l12 12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+        </div>
+      )}
 
-        {/* Event detail modal (same layout as existing calendar) */}
+      {loading && (
+        <div className="banner-loading">
+          Loading events...
+        </div>
+      )}
+
+      <div className="calendar-modal-wrapper">
         {selectedEvent && (
-          <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" onClick={() => setSelectedEvent(null)}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h3 id="modal-title" style={{margin:0}}>{selectedEvent.name}</h3>
-                <button ref={modalCloseRef} className="modal-close" aria-label="Close" onClick={() => setSelectedEvent(null)}>×</button>
+          <div className="calendar-modal">
+            <div className="calendar-modal-content">
+              <div className="calendar-modal-header">
+                <h2 className="calendar-modal-title">{selectedEvent.name}</h2>
+                <button type="button" className="btn-close" onClick={() => setSelectedEvent(null)} aria-label="Close">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path d="M18 6L6 18M6 6l12 12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
               </div>
-              <div className="modal-body">
-                <p><strong>Date:</strong> {formatDateWithOrdinal(selectedEvent.date)}</p>
-                <p><strong>Location:</strong> {selectedEvent.location}</p>
-                <p><strong>{selectedEvent.tide ? selectedEvent.tide : 'HWT'}:</strong> {selectedEvent.hwt}</p>
-                {!selectedEventPdfUrl && (
-                  <p className="muted" style={{marginTop:8}}><strong>Note:</strong> The SIs are not yet available for the {selectedEvent && selectedEvent.name ? selectedEvent.name : 'event'}.</p>
+              <div className="calendar-modal-body">
+                {selectedEvent.location && (
+                  <div className="calendar-modal-location">
+                    <strong>Location:</strong> {selectedEvent.location}
+                  </div>
                 )}
-              </div>
-              <div className="modal-actions">
-                {selectedEventPdfUrl ? (
-                  <>
-                    <a href={selectedEventPdfUrl} target="_blank" rel="noreferrer" className="btn-link" style={{marginRight:8}}>View SI</a>
-                    <a href={selectedEventPdfUrl} download className="btn-link">Download SI</a>
-                  </>
-                ) : (
-                  <>
-                    <button className="btn-link disabled" disabled style={{marginRight:8}}>View SI</button>
-                    <button className="btn-link disabled" disabled>Download SI</button>
-                  </>
+                {selectedEvent.hwt && (
+                  <div className="calendar-modal-time">
+                    <strong>Time:</strong> {selectedEvent.hwt}
+                  </div>
                 )}
-
-                <button className="btn-link" onClick={() => setSelectedEvent(null)} style={{marginLeft:12}}>Close</button>
+                {selectedEvent.tide && (
+                  <div className="calendar-modal-tide">
+                    <strong>Tide:</strong> {selectedEvent.tide}
+                  </div>
+                )}
+                {selectedEvent.pdfUrl && (
+                  <div className="calendar-modal-pdf">
+                    <a href={selectedEvent.pdfUrl} target="_blank" rel="noreferrer" className="btn-pdf">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h8v5h5v11z"/></svg>
+                      <span className="btn-pdf-text">PDF</span>
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           </div>

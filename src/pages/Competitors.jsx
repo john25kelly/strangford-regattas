@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import Papa from 'papaparse'
+import { SHEET_ID } from '../config'
 
-const SHEET_ID = '1e_laZm7dNU6CTKQS69__nv4Rckhp-NZYbuhKFdZCSMA'
 const DEFAULT_GID = '437404464'
 
 export default function Competitors() {

@@ -38,7 +38,7 @@ body{
 
 .header-inner{max-width:980px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;position:relative}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--accent);font-weight:700}
-.brand img{width:36px;height:36px;border-radius:6px;cursor:default}
+.brand img{width:54px;height:54px;border-radius:8px;cursor:default}
 /* ensure the site title link matches the brand styling and has no underline */
 .brand-link{color:var(--accent);text-decoration:none;font-weight:700;margin-left:6px;pointer-events:none;cursor:default}
 .brand-link:hover{color:var(--accent-2)}
@@ -338,8 +338,8 @@ nav a:hover{color:#fff;background:var(--accent-2)}
 
   /* Slightly smaller brand/logo */
   .brand img{
-    width:30px;
-    height:30px;
+    width:45px;
+    height:45px;
   }
 
   /* Slightly reduced title size and spacing */
@@ -371,3 +371,38 @@ nav a:hover{color:#fff;background:var(--accent-2)}
     width: 100% !important;
   }
 }
+
+/* Fallback banner shown when local data is used because remote spreadsheet is unavailable */
+.fallback-banner{
+  background:#fff7e6; /* soft warm background */
+  color:#6b3d00; /* warm brown text */
+  border:1px solid rgba(219, 144, 6, 0.18);
+  padding:8px 12px;
+  border-radius:6px;
+  font-size:0.95rem;
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.fallback-banner small{color:rgba(107,61,0,0.85);font-size:0.85rem}
+
+/* Banner styles used in Calendar page for fallback/error/loading */
+.banner-fallback, .banner-error, .banner-loading{
+  background:#fff7e6; /* default warm banner */
+  color:#6b3d00;
+  border:1px solid rgba(219,144,6,0.18);
+  padding:10px 12px;
+  border-radius:8px;
+  margin:12px 0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.banner-error{background:#fff1f0;color:#6b0017;border-color:rgba(220,53,69,0.12)}
+.banner-loading{background:#eef8ff;color:var(--accent);border-color:rgba(30,111,184,0.08)}
+.banner-fallback-content{display:flex;align-items:center;gap:10px;flex:1}
+.btn-close{background:transparent;border:0;cursor:pointer;color:inherit;padding:6px;border-radius:6px}
+.btn-close svg{opacity:0.7}
+.btn-close:hover svg{opacity:1}
