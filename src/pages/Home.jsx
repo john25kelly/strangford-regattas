@@ -2,6 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react'
 import Papa from 'papaparse'
 import EventTile from '../components/EventTile'
 import EventModal from '../components/EventModal'
+import { fetchWithTimeout } from '../utils/fetchWithTimeout'
+import localEvents from '../data/events.json'
+import { SHEET_URL } from '../config'
 
 // Helper: format ISO date (YYYY-MM-DD) into "12th July 2026"
 function formatDateWithOrdinal(iso) {
@@ -87,7 +90,6 @@ export default function Home() {
   // ensure the public asset path respects Vite's base (works in dev and production)
   const imgSrc = (import.meta && import.meta.env && import.meta.env.BASE_URL ? import.meta.env.BASE_URL : '/') + 'whatsapp-qr.jpg'
 
-  const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1aJbtVHiTU1XrvAq1aW7ZJ2kxeRPzdDFi29Xq55htjg4/edit?usp=sharing'
   const csvUrl = normalizeToCsvUrl(SHEET_URL)
 
   const [events, setEvents] = useState([])
@@ -95,6 +97,7 @@ export default function Home() {
   const [error, setError] = useState(null)
   const [countdown, setCountdown] = useState('')
   const [selectedEvent, setSelectedEvent] = useState(null)
+  const [usingFallback, setUsingFallback] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -102,11 +105,27 @@ export default function Home() {
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch(csvUrl)
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const text = await res.text()
-        let parsed = Papa.parse(text, { header: true, skipEmptyLines: true })
-        let data = parsed.data || []
+        let text
+        try {
+          text = await fetchWithTimeout(csvUrl, 10000)
+        } catch (fetchErr) {
+          // fallback to local events if remote fetch fails/times out
+          if (!cancelled) {
+            setUsingFallback(true)
+            setEvents(localEvents.map(e => ({
+             date: parseDateToIso(e.date) || '',
+             name: e.name || '',
+             location: e.location || '',
+             hwt: e.hwt || undefined,
+             tide: e.tide || undefined,
+             pdfUrl: e.pdfUrl || undefined
+           })).filter(e => e.date && e.name))
+           setLoading(false)
+           }
+           return
+         }
+         let parsed = Papa.parse(text, { header: true, skipEmptyLines: true })
+         let data = parsed.data || []
 
         const firstHeader = (parsed.meta && parsed.meta.fields && parsed.meta.fields[0]) || ''
         const looksLikeDateHeader = /^(\d{1,2}(st|nd|rd|th)?\s+\w+\s+\d{4}|\d{4}-\d{2}-\d{2})/i.test(firstHeader)
@@ -191,6 +210,13 @@ export default function Home() {
     <div className="page home">
       <h1>Welcome to Strangford Lough Regattas</h1>
       <section className="home-content">
+
+        {usingFallback && (
+          <div className="fallback-banner" role="status" aria-live="polite">
+            Using local cached event data because the remote spreadsheet could not be reached.
+            <small>Data may be out-of-date.</small>
+          </div>
+        )}
 
         {/* Upcoming events section: countdown above 4 small event tiles */}
         <div className="nor-tile" style={{marginBottom:16}}>

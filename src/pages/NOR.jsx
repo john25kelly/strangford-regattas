@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import Papa from 'papaparse'
 import NORTile from '../components/NORTile'
+import { fetchWithTimeout } from '../utils/fetchWithTimeout'
+import localEvents from '../data/events.json'
+import { SHEET_URL } from '../config'
 
 // Helper: format ISO date (YYYY-MM-DD) into "12th July 2026"
 function formatDateWithOrdinal(iso) {
@@ -84,12 +87,12 @@ function normalizeToCsvUrl(url) {
 }
 
 export default function NOR() {
-  const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1aJbtVHiTU1XrvAq1aW7ZJ2kxeRPzdDFi29Xq55htjg4/edit?usp=sharing'
   const csvUrl = normalizeToCsvUrl(SHEET_URL)
 
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [usingFallback, setUsingFallback] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -97,62 +100,86 @@ export default function NOR() {
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch(csvUrl)
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const text = await res.text()
-        let parsed = Papa.parse(text, { header: true, skipEmptyLines: true })
-        let data = parsed.data || []
-
-        const firstHeader = (parsed.meta && parsed.meta.fields && parsed.meta.fields[0]) || ''
-        const looksLikeDateHeader = /^(\d{1,2}(st|nd|rd|th)?\s+\w+\s+\d{4}|\d{4}-\d{2}-\d{2})/i.test(firstHeader)
-        if (data.length === 0 || looksLikeDateHeader) {
-          const parsedNoHeader = Papa.parse(text, { header: false, skipEmptyLines: true })
-          const rowsArr = parsedNoHeader.data || []
-          data = rowsArr.map(r => ({
-            date: (r[0] || '').toString(),
-            name: (r[1] || '').toString(),
-            location: (r[2] || '').toString(),
-            hwt: (r[3] || '').toString(),
-            tide: (r[4] || '').toString(),
-            pdfUrl: (r[5] || '').toString()
-          }))
+        // attempt fetch with 10s timeout; if it fails, fall back to local data
+        let text
+        try {
+          text = await fetchWithTimeout(csvUrl, 10000)
+        } catch (fetchErr) {
+          // fallback to local JSON data (already parsed)
+          if (!cancelled) {
+            setUsingFallback(true)
+            setEvents(localEvents.map(e => ({
+             // convert local data (already in friendly date text) into the same shape as normal parsed events
+             date: e.date ? parseDateToIso(e.date) || '' : '',
+             name: e.name || '',
+             location: e.location || '',
+             hwt: e.hwt || undefined,
+             pdfUrl: e.pdfUrl || undefined,
+             colour: e.colour || undefined
+           })).filter(e => e.date && e.name))
+          }
+          return
         }
+         let parsed = Papa.parse(text, { header: true, skipEmptyLines: true })
+         let data = parsed.data || []
 
-        const eventsOut = []
-        for (const r of data) {
-          const norm = {}
-          for (const k of Object.keys(r)) norm[k.trim().toLowerCase()] = (r[k] || '').toString().trim()
+         const firstHeader = (parsed.meta && parsed.meta.fields && parsed.meta.fields[0]) || ''
+         const looksLikeDateHeader = /^(\d{1,2}(st|nd|rd|th)?\s+\w+\s+\d{4}|\d{4}-\d{2}-\d{2})/i.test(firstHeader)
+         if (data.length === 0 || looksLikeDateHeader) {
+           const parsedNoHeader = Papa.parse(text, { header: false, skipEmptyLines: true })
+           const rowsArr = parsedNoHeader.data || []
+           data = rowsArr.map(r => ({
+             date: (r[0] || '').toString(),
+             name: (r[1] || '').toString(),
+             location: (r[2] || '').toString(),
+             hwt: (r[3] || '').toString(),
+             tide: (r[4] || '').toString(),
+             pdfUrl: (r[5] || '').toString()
+           }))
+         }
 
-          const dateRaw = norm['date'] || norm['day'] || norm['event date'] || norm['start date'] || ''
-          const name = norm['name'] || norm['event'] || norm['title'] || ''
-          const location = norm['location'] || norm['club'] || ''
-          const hwt = norm['hwt'] || norm['time'] || ''
-          const pdfUrl = norm['pdfurl'] || norm['pdf url'] || norm['si'] || norm['url'] || ''
-          // support optional color/colour column (case-insensitive)
-          const colour = norm['colour'] || norm['color'] || ''
+         const eventsOut = []
+         for (const r of data) {
+           const norm = {}
+           for (const k of Object.keys(r)) norm[k.trim().toLowerCase()] = (r[k] || '').toString().trim()
 
-          const iso = parseDateToIso(dateRaw)
-          if (!iso || !name) continue
-          eventsOut.push({ date: iso, name, location, hwt: hwt || undefined, pdfUrl: pdfUrl || undefined, colour: colour || undefined })
-        }
+           const dateRaw = norm['date'] || norm['day'] || norm['event date'] || norm['start date'] || ''
+           const name = norm['name'] || norm['event'] || norm['title'] || ''
+           const location = norm['location'] || norm['club'] || ''
+           const hwt = norm['hwt'] || norm['time'] || ''
+           const pdfUrl = norm['pdfurl'] || norm['pdf url'] || norm['si'] || norm['url'] || ''
+           // support optional color/colour column (case-insensitive)
+           const colour = norm['colour'] || norm['color'] || ''
 
-        // sort chronologically ascending (earliest first)
-        eventsOut.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+           const iso = parseDateToIso(dateRaw)
+           if (!iso || !name) continue
+           eventsOut.push({ date: iso, name, location, hwt: hwt || undefined, pdfUrl: pdfUrl || undefined, colour: colour || undefined })
+         }
+
+         // sort chronologically ascending (earliest first)
+         eventsOut.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
 
         if (!cancelled) setEvents(eventsOut)
-      } catch (err) {
-        if (!cancelled) setError(String(err))
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-    fetchCsv()
-    return () => { cancelled = true }
-  }, [csvUrl])
+       } catch (err) {
+         if (!cancelled) setError(String(err))
+       } finally {
+         if (!cancelled) setLoading(false)
+       }
+     }
+     fetchCsv()
+     return () => { cancelled = true }
+   }, [csvUrl])
 
   return (
     <div className="page nor">
       <h1>NOR and Sailing Instructions</h1>
+
+      {usingFallback && (
+        <div className="fallback-banner" role="status" aria-live="polite">
+          Using local cached event data because the remote spreadsheet could not be reached.
+          <small>Data may be out-of-date.</small>
+        </div>
+      )}
 
       {loading && <p className="muted">Loading events …</p>}
       {error && <p className="muted">Error loading sheet: {error}</p>}
