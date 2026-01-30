@@ -17,7 +17,7 @@ const contacts = [
   { id: 2, name: 'Ian Bogie', heading: 'Secretary', phone: '+44 7968 858164', email: 'ian.bogie@btinternet.com', website: null },
   { id: 3, name: 'East Down Yacht Club', role: 'Club Rep: James Curran', phone: '+44 7887 707913', email: 'info@edyc.co.uk', website: normalizeWebsite('edyc.co.uk') },
   { id: 4, name: 'Killyleagh Yacht Club', role: 'Club Rep: Mike Spence', phone: '+44 7771 621582', email: 'michaelspence147@gmail.com', website: normalizeWebsite('killyleaghyachtclub.co.uk') },
-  { id: 5, name: 'Kircubbin Sailing Club', role: 'Club Rep: Pete McDowell', phone: '+44 7877 081462', email: 'pete_mcd@aol.co.uk', website: normalizeWebsite('kircubbinsailing.club') },
+  { id: 5, name: 'Kircubbin Sailing Club', role: 'Club Rep: Pete McDowell', phone: '+44 7877 081462', email: 'sailing@kircubbinsailing.club', website: normalizeWebsite('kircubbinsailing.club') },
   { id: 6, name: 'Newtownards Sailing Club', role: 'Club Rep: Jennifer Bryce', phone: '+44 7904 014141', email: 'jenniferbryce@gmail.com', website: normalizeWebsite('newtownardssailingclub.co.uk') },
   { id: 7, name: 'Portaferry Sailing Club', role: 'Club Rep: John McAlea', phone: '+44 7877 160234', email: 'jmcalea58@gmail.com', website: normalizeWebsite('portaferrysailingclub.org') },
   { id: 8, name: 'Quoile Yacht Club', role: 'Club Rep: Harry Crosby', phone: '+44 7734 866675', email: 'harryrcrosby@gmail.com', website: normalizeWebsite('quoileyachtclub.com') },
