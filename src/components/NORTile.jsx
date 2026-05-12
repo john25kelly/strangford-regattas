@@ -146,7 +146,7 @@ export default function NORTile({ title, date, location, hwt, pdfUrl, colour, no
         <p className="muted" style={Object.assign({ marginTop: 8 }, tileTextColor ? { color: tileTextColor } : undefined)}>
           {note}
         </p>
-      ) : ((!hwt || !siAvailable) && (
+      ) : (!siAvailable && (
         <p className="muted" style={Object.assign({ marginTop: 8 }, tileTextColor ? { color: tileTextColor } : undefined)}>
           <strong>Note:</strong> The SI is not yet available for this event
         </p>
