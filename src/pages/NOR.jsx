@@ -88,6 +88,9 @@ function normalizeToCsvUrl(url) {
 
 export default function NOR() {
   const csvUrl = normalizeToCsvUrl(SHEET_URL)
+  const base = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL) ? import.meta.env.BASE_URL : '/'
+  const normalizedBase = base.endsWith('/') ? base : `${base}/`
+  const generalSiPdfUrl = `${normalizedBase}pdfs/NoR_GSI_2026.pdf`
 
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(false)
@@ -189,8 +192,7 @@ export default function NOR() {
         <NORTile
           key="general-si"
           title="General Sailing Instructions"
-          pdfUrl={undefined}
-          note="Note: the general SI are not yet available."
+          pdfUrl={generalSiPdfUrl}
           image="new-logo.jpg"
         />
         {events.map((e, idx) => (
