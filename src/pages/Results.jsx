@@ -1,7 +1,7 @@
 import React from 'react'
 
 export default function Results() {
-  const resultsUrl = 'https://halsail.com/Result/Club/3815'
+  const resultsUrl = 'https://halsail-1e484.kxcdn.com/Result/Public/97364'
 
   return (
     <div className="page results">
